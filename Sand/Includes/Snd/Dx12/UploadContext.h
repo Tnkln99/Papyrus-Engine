@@ -23,8 +23,8 @@ namespace Snd::Dx12
 		explicit UploadContext(Device& device);
 		~UploadContext();
 
-		void registerBufferForUpload(const std::shared_ptr<Buffer>& buffer, void* data);
-		void registerTexture2DForUpload(const std::shared_ptr<Texture2D>& texture, void* data);
+		void registerBufferForUpload(const std::shared_ptr<Buffer>& buffer, const void* data);
+		void registerTexture2DForUpload(const std::shared_ptr<Texture2D>& texture, const void* data);
 
 		void flush();
 
@@ -33,14 +33,14 @@ namespace Snd::Dx12
 		{
 			std::weak_ptr<Buffer> m_buffer;
 			std::unique_ptr<Buffer> m_uploadBuffer;
-			void* m_data;
+			const void* m_data;
 		};
 
 		struct TextureToUpload
 		{
 			std::weak_ptr<Texture2D> m_texture;
 			std::unique_ptr<Buffer> m_uploadBuffer;
-			void* m_data;
+			const void* m_data;
 		};
 
 	private:
@@ -49,6 +49,7 @@ namespace Snd::Dx12
 
 		void uploadBuffer(const BufferToUpload& bufferToUpload) const;
 		void uploadTexture2D(const TextureToUpload& uploadTexture) const;
+
 	private:
 		Device& m_device;
 

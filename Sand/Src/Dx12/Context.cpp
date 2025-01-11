@@ -81,12 +81,12 @@ namespace Snd::Dx12
         m_graphicsCommandList->setScissorRects(*m_scissorRect);
     }
 
-    void Context::upload(const std::shared_ptr<Buffer>& bufferToUpload, void* data) const
+    void Context::upload(const std::shared_ptr<Buffer>& bufferToUpload, const void* data) const
     {
         m_uploadContext->registerBufferForUpload(bufferToUpload, data);
     }
 
-    void Context::upload(const std::shared_ptr<Texture2D>& textureToUpload, void *data) const
+    void Context::upload(const std::shared_ptr<Texture2D>& textureToUpload, const void *data) const
     {
         m_uploadContext->registerTexture2DForUpload(textureToUpload, data);
     }
@@ -111,6 +111,11 @@ namespace Snd::Dx12
         m_graphicsCommandList->bindVertexBufferView(view);
     }
 
+    void Context::bindIndexBufferView(const IndexBufferView &view) const
+    {
+        m_graphicsCommandList->bindIndexBufferView(view);
+    }
+
     void Context::drawInstanced(const UINT vertexCountPerInstance, const UINT instanceCount, const UINT startVertexLocation, const UINT startInstanceLocation) const
     {
         m_graphicsCommandList->drawInstanced(
@@ -118,6 +123,12 @@ namespace Snd::Dx12
             instanceCount, 
             startVertexLocation, 
             startInstanceLocation);
+    }
+
+    void Context::drawIndexedInstanced(const UINT indexCountPerInstance, const UINT instanceCount, const UINT startIndexLocation,
+        const INT baseVertexLocation, const UINT startInstanceLocation) const
+    {
+        m_graphicsCommandList->drawIndexedInstanced(indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
     }
 
     void Context::setDescriptorHeaps(const std::vector<DescriptorHeap> &descriptorHeaps) const
@@ -130,7 +141,10 @@ namespace Snd::Dx12
         m_graphicsCommandList->setGraphicsRootDescriptorTable(rootParameterIndex, descriptorHeap, descriptorIndex);
     }
 
-    void Context::transition(const std::shared_ptr<Resource>& resource, const ResourceState afterState, const UINT subresource, const ResourceBarrierFlag::Type flags,
+    void Context::transition(const std::shared_ptr<Resource>& resource,
+        const ResourceState afterState,
+        const UINT subresource,
+        const ResourceBarrierFlag::Type flags,
         const ResourceBarrierType type) const
     {
         resource->transition(*m_graphicsCommandList, afterState, subresource, flags, type);

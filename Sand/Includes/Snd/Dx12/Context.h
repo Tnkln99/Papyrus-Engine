@@ -7,6 +7,7 @@
 
 namespace Snd::Dx12
 {
+	class IndexBufferView;
 	enum class ResourceState;
 	enum class PrimitiveTopology;
 
@@ -32,7 +33,7 @@ namespace Snd::Dx12
 		Context(const HWND& hWnd, UINT displayWidth, UINT displayHeight);
 		~Context();
 
-		// this should be called before rendering starts, should be called once just before rendering
+		// this should be called before rendering starts, should be called once, just before rendering
 		// will flush all the CommandList commands user listed before rendering starts
 		void init() const;
 
@@ -41,17 +42,24 @@ namespace Snd::Dx12
 		void preRecording();
 
 #pragma region commammand list communications
-		void upload(const std::shared_ptr<Buffer>& bufferToUpload, void* data) const;
-		void upload(const std::shared_ptr<Texture2D>& textureToUpload, void* data) const;
+		void upload(const std::shared_ptr<Buffer>& bufferToUpload, const void* data) const;
+		void upload(const std::shared_ptr<Texture2D>& textureToUpload, const void* data) const;
 
 		void bindRootSignature(const RootSignature& rootSignature) const;
 		void bindPipelineState(const PipelineState& pipelineState) const;
 		void setTopologyTypeTriangleList(PrimitiveTopology topology) const;
 		void bindVertexBufferView(const VertexBufferView& view) const;
+		void bindIndexBufferView(const IndexBufferView& view) const;
 		void drawInstanced(
 			UINT vertexCountPerInstance, 
 			UINT instanceCount, 
 			UINT startVertexLocation, 
+			UINT startInstanceLocation) const;
+		void drawIndexedInstanced(
+			UINT indexCountPerInstance,
+			UINT instanceCount,
+			UINT startIndexLocation,
+			INT baseVertexLocation,
 			UINT startInstanceLocation) const;
 		void setDescriptorHeaps(const std::vector<DescriptorHeap>& descriptorHeaps) const;
 		void setGraphicsRootDescriptorTable(UINT rootParameterIndex, const DescriptorHeap& descriptorHeap, UINT descriptorIndex) const;

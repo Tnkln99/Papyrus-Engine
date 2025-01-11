@@ -17,4 +17,4 @@ add_subdirectory(Oasis)
 add_executable(Papyrus "Papyrus.cpp")
 
 # Linking against Sand
-target_link_libraries(Papyrus PRIVATE Nomad Caravan Oasis)
+target_link_libraries(Papyrus PRIVATE Merchant Nomad Caravan Oasis)

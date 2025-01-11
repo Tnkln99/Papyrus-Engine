@@ -6,6 +6,7 @@
 
 namespace Snd::Dx12
 {
+	class IndexBufferView;
 	enum class PrimitiveTopology;
 
 	class Texture2D;
@@ -51,6 +52,7 @@ namespace Snd::Dx12
 
 		void bindPipelineState(const PipelineState& pipelineState) const;
 		void bindVertexBufferView(const VertexBufferView& view) const;
+		void bindIndexBufferView(const IndexBufferView& view) const;
 		void bindRootSignature(const RootSignature& rootSignature) const;
 		void setDescriptorHeaps(const std::vector<DescriptorHeap>& descriptorHeaps) const;
 		void setGraphicsRootDescriptorTable(UINT rootParameterIndex, const DescriptorHeap& descriptorHeap, UINT descriptorIndex) const;
@@ -63,6 +65,12 @@ namespace Snd::Dx12
 			UINT vertexCountPerInstance,
 			UINT instanceCount,
 			UINT startVertexLocation,
+			UINT startInstanceLocation) const;
+		void drawIndexedInstanced(
+			UINT indexCountPerInstance,
+			UINT instanceCount,
+			UINT startIndexLocation,
+			INT baseVertexLocation,
 			UINT startInstanceLocation) const;
 
 

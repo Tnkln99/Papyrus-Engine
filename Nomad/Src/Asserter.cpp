@@ -6,6 +6,7 @@ namespace Nmd
 {
     void Asserter::assertation(AssertType type, const bool condition, const std::string &message)
     {
+#ifdef _DEBUG
         switch (type)
         {
             case AssertType::Expect:
@@ -17,6 +18,6 @@ namespace Nmd
             }
             break;
         }
-
+#endif
     }
 }

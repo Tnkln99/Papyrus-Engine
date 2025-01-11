@@ -17,12 +17,6 @@ namespace Snd::Dx12
 		std::weak_ptr<Buffer> m_buffer;
 		D3D12_VERTEX_BUFFER_VIEW m_bufferView;
 	};
-
-	class ConstantBufferView
-	{
-	public:
-		explicit ConstantBufferView(const std::shared_ptr<Buffer>& buffer);
-	};
 }
 
 

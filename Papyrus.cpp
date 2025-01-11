@@ -1,6 +1,7 @@
 #include "Os/WindowFactory.h"
 #include "Crv/Renderers/HelloTriangleRenderer.h"
 #include "Nmd/Logger.h"
+#include "Mrc/Importer.h"
 
 #include <windows.h>
 #include <iostream>

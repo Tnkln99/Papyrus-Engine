@@ -25,7 +25,7 @@ namespace Snd::Dx12
 
 	UploadContext::~UploadContext() = default;
 
-	void UploadContext::registerBufferForUpload(const std::shared_ptr<Buffer> &buffer, void *data)
+	void UploadContext::registerBufferForUpload(const std::shared_ptr<Buffer> &buffer, const void *data)
 	{
 		m_flushFlag = true;
 
@@ -42,7 +42,7 @@ namespace Snd::Dx12
 			data });
 	}
 
-	void UploadContext::registerTexture2DForUpload(const std::shared_ptr<Texture2D> &texture, void *data)
+	void UploadContext::registerTexture2DForUpload(const std::shared_ptr<Texture2D> &texture, const void *data)
 	{
 		m_flushFlag = true;
 

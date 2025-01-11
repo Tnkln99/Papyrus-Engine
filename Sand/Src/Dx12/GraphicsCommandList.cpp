@@ -9,15 +9,15 @@
 #include "Snd/Dx12/VertexBufferView.h"
 #include "Snd/Dx12/DescriptorHeap.h"
 #include "Snd/Dx12/Buffer.h"
-
 #include "Snd/Dx12/Viewport.h"
 #include "Snd/Dx12/ScissorRect.h"
 #include "Snd/Dx12/Texture.h"
-
+#include "Snd/Dx12/IndexBufferView.h"
+#include "Snd/Dx12/Utils/Common.h"
 #include "Snd/Dx12/Utils/DxHelpers.h"
 
 #include "Nmd/Logger.h"
-#include "Snd/Dx12/Utils/Common.h"
+
 
 using Microsoft::WRL::ComPtr;
 
@@ -98,6 +98,12 @@ namespace Snd::Dx12
 		m_commandList->IASetVertexBuffers(0, 1, &dxBufferView);
 	}
 
+	void GraphicsCommandList::bindIndexBufferView(const IndexBufferView &view) const
+	{
+		const auto dxBufferView = view.getDxBufferView();
+		m_commandList->IASetIndexBuffer(&dxBufferView);
+	}
+
 	void GraphicsCommandList::bindRootSignature(const RootSignature& rootSignature) const
 	{
 		const auto dxRoot = rootSignature.getDxRootSignature();
@@ -174,6 +180,12 @@ namespace Snd::Dx12
 			instanceCount,
 			startVertexLocation,
 			startInstanceLocation);
+	}
+
+	void GraphicsCommandList::drawIndexedInstanced(const UINT indexCountPerInstance, const UINT instanceCount,
+		const UINT startIndexLocation, const INT baseVertexLocation, const UINT startInstanceLocation) const
+	{
+		m_commandList->DrawIndexedInstanced(indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
 	}
 
 	ComPtr<ID3D12GraphicsCommandList> GraphicsCommandList::getDxGraphicsCommandList() const

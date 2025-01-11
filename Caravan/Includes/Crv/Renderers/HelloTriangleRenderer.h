@@ -44,11 +44,14 @@ namespace Crv
 		std::shared_ptr<Snd::Dx12::Texture2D> m_gpuTexture;
 		std::vector<UINT8> m_cpuTextureData{};
 
-		struct alignas(16) TriangleVertex
+		struct alignas(16) SquareVertex
 		{
 			DirectX::XMFLOAT4 m_position{};
 			DirectX::XMFLOAT2 m_uv{};
 		};
+		const std::vector<uint16_t> m_indices =	{0, 1, 2, // First triangle (Top-left, Top-right, Bottom-right)
+										0, 2, 3}; // Second triangle (Top-left, Bottom-right, Bottom-left);
+
 		std::unique_ptr<StaticMesh> m_triangleMesh;
 
 		std::unique_ptr<Snd::Dx12::PipelineState> m_helloTrianglePipeline;

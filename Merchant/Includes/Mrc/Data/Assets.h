@@ -14,17 +14,20 @@ namespace Mrc
 
     struct AStaticMesh
     {
+        std::string m_name;
         std::vector<AVertex> m_vertices;
         std::vector<uint32_t> m_indices;
     };
 
     struct AStaticModel
     {
+        std::string m_name;
         std::vector<AStaticMesh> m_meshes;
     };
 
     struct AScene
     {
+        std::string m_name;
         std::vector<AStaticModel> m_models;
     };
 }

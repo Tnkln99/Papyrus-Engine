@@ -16,5 +16,5 @@ file(GLOB_RECURSE SOURCES "Src/*.cpp" "Src/*.h")
 target_sources(MerchantTests PRIVATE ${SOURCES})
 
 # Link
-target_link_libraries(MerchantTests PRIVATE Alchemist)
+target_link_libraries(MerchantTests PRIVATE Merchant)
 target_link_libraries(MerchantTests PUBLIC gtest_main)

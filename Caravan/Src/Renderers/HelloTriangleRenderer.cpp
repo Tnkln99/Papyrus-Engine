@@ -3,8 +3,9 @@
 
 #include <algorithm>
 
-#include "Crv/Data/StaticMesh.h"
-#include "Crv/Data/VerticesInfo.h"
+#include "Crv/Data/StaticModelCreateInfo.h"
+#include "Crv/PrivateData/StaticModel.h"
+#include "Crv/PrivateData/DataGenerators.h"
 
 #include "Snd/ShaderCode.h"
 #include "Snd/Dx12/Context.h"
@@ -14,7 +15,6 @@
 #include "Snd/Dx12/DescriptorHeap.h"
 #include "Snd/Dx12/Texture.h"
 
-#include "Crv/Data/DataGenerators.h"
 #include "Snd/Dx12/Buffer.h"
 #include "Snd/Dx12/StaticSamplers.h"
 #include "Snd/Dx12/Utils/Common.h"
@@ -35,7 +35,7 @@ namespace Crv
 	{
 		m_context = std::make_shared<Snd::Dx12::Context>(m_hwnd, m_displayWidth, m_displayHeight);
 
-		// constant buffer preparation
+		// cbv and srv preparation
 		{
 			m_inputDescriptorHeap = std::make_unique<Snd::Dx12::DescriptorHeap>(
 			"HelloTriangle input Descriptor",
@@ -136,22 +136,25 @@ namespace Crv
 		// triangle mesh preparation
 		{
 			const float aspectRatio = static_cast<float>(m_displayWidth) / static_cast<float>(m_displayHeight);
-			TriangleVertex triangleVertices[] =
-		   {
-				{ { 0.0f, 0.25f * aspectRatio, 0.0f, 1.0f }, { 0.5f, 0.0f } },
-				{ { 0.25f, -0.25f * aspectRatio, 0.0f, 1.0f }, { 1.0f, 1.0f }},
-				{ { -0.25f, -0.25f * aspectRatio, 0.0f, 1.0f }, { 0.0f, 1.0f }}
-		   };
-
-			VerticesInfo verticesInfo
+			SquareVertex squareVertices[] =
 			{
-				triangleVertices,
-				sizeof(TriangleVertex),
-				3
+				{ { -0.25f, 0.25f * aspectRatio, 0.0f, 1.0f }, { 0.0f, 0.0f } },
+				{ {  0.25f, 0.25f * aspectRatio, 0.0f, 1.0f }, { 1.0f, 0.0f } },
+				{ {  0.25f, -0.25f * aspectRatio, 0.0f, 1.0f }, { 1.0f, 1.0f } },
+				{ { -0.25f, -0.25f * aspectRatio, 0.0f, 1.0f }, { 0.0f, 1.0f } }
 			};
 
-			m_triangleMesh = std::make_unique<StaticMesh>(m_context, "TriangleMesh", verticesInfo);
-			m_triangleMesh->immediateUpload();
+			GeometryBufferCreateInfo verticesInfo
+			{
+				squareVertices,
+				sizeof(SquareVertex),
+				4,
+				m_indices
+			};
+
+			m_triangleMesh = std::make_unique<StaticMesh>(*m_context, "TriangleMesh", verticesInfo);
+			m_context->upload(m_triangleMesh->getVertexBuffer(), m_triangleMesh->getVertexBufferCpuData());
+			m_context->upload(m_triangleMesh->getIndexBuffer(), m_triangleMesh->getIndexBufferCpuData().data());
 		}
 
 		m_context->init();
@@ -188,10 +191,12 @@ namespace Crv
 		m_context->setGraphicsRootDescriptorTable(1, *m_inputDescriptorHeap, 2);
 
 		m_context->setTopologyTypeTriangleList(Snd::Dx12::PrimitiveTopology::TriangleList);
-		m_triangleMesh->bind();
-		m_context->drawInstanced(
-			3,
+		m_context->bindVertexBufferView(*m_triangleMesh->getVertexBufferView());
+		m_context->bindIndexBufferView(*m_triangleMesh->getIndexBufferView());
+		m_context->drawIndexedInstanced(
+			m_indices.size(),
 			1,
+			0,
 			0,
 			0);
 
