@@ -1,6 +1,0 @@
-[submodule "Merchant/Externals/assimp"]
-	path = Merchant/Externals/assimp
-	url = https://github.com/assimp/assimp
-[submodule "Externals/googletest"]
-	path = Externals/googletest
-	url = https://github.com/google/googletest.git
