@@ -17,7 +17,7 @@ target_sources(SandTests PRIVATE ${SOURCES})
 
 # Link
 target_link_libraries(SandTests PRIVATE Sand)
-target_link_libraries(SandTests PUBLIC gtest_main)
+target_link_libraries(SandTests PUBLIC GTest::gtest_main)
 
 target_link_libraries(SandTests PRIVATE
         d3d12.lib

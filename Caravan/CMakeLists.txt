@@ -95,3 +95,5 @@ if(WIN32)
             dxguid.lib
     )
 endif()
+
+add_subdirectory(Tests)

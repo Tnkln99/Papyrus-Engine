@@ -36,6 +36,7 @@ namespace Snd::Dx12
 		// todo: add other descriptor initiations
 		void newConstantBufferView(const Device& device, const Buffer& buffer, UINT index) const;
 		void newShaderResourceView(const Device& device, const Texture2D& texture, UINT index) const;
+		void newShaderResourceView(const Device& device, const Buffer& buffer, UINT index) const;
 	private:
 		D3D12_DESCRIPTOR_HEAP_DESC m_desc{};
 		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_descHeap;

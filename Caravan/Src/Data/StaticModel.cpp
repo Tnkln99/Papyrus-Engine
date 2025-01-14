@@ -49,27 +49,27 @@ namespace Crv
 
     StaticMesh::~StaticMesh() = default;
 
-    std::shared_ptr<Snd::Dx12::VertexBufferView> StaticMesh::getVertexBufferView() const
+    const std::shared_ptr<Snd::Dx12::VertexBufferView>& StaticMesh::getVertexBufferView() const
     {
         return m_vertexBufferView;
     }
 
-    std::shared_ptr<Snd::Dx12::Buffer> StaticMesh::getVertexBuffer()
+    const std::shared_ptr<Snd::Dx12::Buffer>& StaticMesh::getVertexBuffer() const
     {
         return m_vertexBuffer;
     }
 
-    void* StaticMesh::getVertexBufferCpuData() const
+    const void* StaticMesh::getVertexBufferCpuData() const
     {
         return m_vertexCpuData;
     }
 
-    std::shared_ptr<Snd::Dx12::IndexBufferView> StaticMesh::getIndexBufferView() const
+    const std::shared_ptr<Snd::Dx12::IndexBufferView>& StaticMesh::getIndexBufferView() const
     {
         return m_indexBufferView;
     }
 
-    std::shared_ptr<Snd::Dx12::Buffer> StaticMesh::getIndexBuffer()
+    const std::shared_ptr<Snd::Dx12::Buffer>& StaticMesh::getIndexBuffer() const
     {
         return m_indexBuffer;
     }

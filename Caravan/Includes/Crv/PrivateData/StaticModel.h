@@ -22,12 +22,12 @@ namespace Crv
 		StaticMesh(const Snd::Dx12::Context& graphicsContext, const std::string& name, const GeometryBufferCreateInfo& geometryInfo);
 		~StaticMesh();
 
-		[[nodiscard]] std::shared_ptr<Snd::Dx12::VertexBufferView> getVertexBufferView() const;
-		std::shared_ptr<Snd::Dx12::Buffer> getVertexBuffer();
-		[[nodiscard]] void* getVertexBufferCpuData() const;
+		[[nodiscard]] const std::shared_ptr<Snd::Dx12::VertexBufferView>& getVertexBufferView() const;
+		[[nodiscard]] const std::shared_ptr<Snd::Dx12::Buffer>& getVertexBuffer() const;
+		[[nodiscard]] const void* getVertexBufferCpuData() const;
 
-		[[nodiscard]] std::shared_ptr<Snd::Dx12::IndexBufferView> getIndexBufferView() const;
-		std::shared_ptr<Snd::Dx12::Buffer> getIndexBuffer();
+		[[nodiscard]] const std::shared_ptr<Snd::Dx12::IndexBufferView>& getIndexBufferView() const;
+		[[nodiscard]] const std::shared_ptr<Snd::Dx12::Buffer>& getIndexBuffer() const;
 		[[nodiscard]] const std::vector<uint16_t>& getIndexBufferCpuData() const;
 
 	private:
@@ -42,7 +42,6 @@ namespace Crv
 
 	struct StaticModel
 	{
-		std::string m_name;
 		std::vector<StaticMesh> m_meshes;
 	};
 }

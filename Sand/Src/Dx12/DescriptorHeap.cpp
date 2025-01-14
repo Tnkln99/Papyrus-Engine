@@ -78,4 +78,21 @@ namespace Snd::Dx12
 
 		device.getDxDevice()->CreateShaderResourceView(texture.getDxResource().Get(), &srvDesc, hCpu(index));
 	}
+
+	void DescriptorHeap::newShaderResourceView(const Device &device, const Buffer &buffer, UINT index) const
+	{
+		NOMAD_ASSERT(Nmd::AssertType::Assert, m_desc.Type == D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, "Descriptor type is not correct");
+
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		srvDesc.Format = DXGI_FORMAT_UNKNOWN; // Use UNKNOWN for buffers without a specific format
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+		srvDesc.Buffer.FirstElement = 0;
+		srvDesc.Buffer.NumElements = buffer.getElementCount(); // Number of elements in the buffer
+		srvDesc.Buffer.StructureByteStride = buffer.getElementSize(); // Size of each element in bytes
+		srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE; // Set flags if needed (e.g., RAW buffer)
+
+		device.getDxDevice()->CreateShaderResourceView(buffer.getDxResource().Get(), &srvDesc, hCpu(index));
+	}
+
 }

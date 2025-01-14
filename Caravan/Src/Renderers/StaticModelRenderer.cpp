@@ -1,7 +1,5 @@
 #include "Crv/Renderers/StaticModelRenderer.h"
 
-#include <ranges>
-
 #include "Crv/PrivateData/StaticModel.h"
 #include "Crv/Data/StaticModelCreateInfo.h"
 
@@ -20,6 +18,7 @@
 #include "Nmd/Logger.h"
 
 #include <unordered_map>
+#include <ranges>
 
 #include "VxStaticModel.h"
 #include "PxStaticModel.h"
@@ -37,16 +36,15 @@ namespace Crv
 
         void updateCamera(const DirectX::XMFLOAT4X4& viewMatrix, const DirectX::XMFLOAT4X4& projectionMatrix);
         void update(float dt);
-        void render() const;
+        void render();
 
-        void registerModel(StaticModelCreateInfo modelInfo);
-        void unregisterModel(const std::string &name);
+        void changeModel(const StaticModelCreateInfo &modelInfo);
 
         // returns instance id who has been created
-        uint32_t addModelInstance(const std::string &modelName, const DirectX::XMFLOAT4X4 &modelMatrix);
-        void removeModelInstance(const std::string &m_modelName, uint32_t instanceId);
+        uint32_t addModelInstance(const DirectX::XMFLOAT4X4 &modelMatrix);
+        void removeModelInstance(uint32_t instanceId);
 
-        void setTransformStaticModelInstance(const std::string &m_modelName, uint32_t instanceId, const DirectX::XMFLOAT4X4 &modelMatrix);
+        void setTransformStaticModelInstance(uint32_t instanceId, const DirectX::XMFLOAT4X4 &modelMatrix);
 
     private:
         struct ModelInstanceData
@@ -67,12 +65,12 @@ namespace Crv
         };
 
     private:
-        const static uint32_t s_cMaxInstanceCount;
+        static constexpr uint32_t s_cMaxInstanceCount = 1000;
 
         CameraCpuData m_constantBufferCpuData{};
 
-        std::unordered_map<std::string, RegisteredStaticModel> m_models;
-        std::unordered_map<std::string, std::vector<ModelInstanceData>> m_modelToInstances;
+        RegisteredStaticModel m_registeredStaticModel{};
+        std::vector<ModelInstanceData> m_instanceDatas;
 
     private:
         const HWND& m_hwnd;
@@ -89,8 +87,8 @@ namespace Crv
         std::vector<std::shared_ptr<Snd::Dx12::Buffer>> m_cameraConstantBufferGpuData{}; // multiple for multiple buffering
         std::vector<UINT8*> m_cameraConstantBufferCpuVisibleGpuPointers; // multiple for multiple buffering
 
-        std::vector<std::shared_ptr<Snd::Dx12::Buffer>> m_instancesConstantBufferGpuData{}; // multiple for multiple buffering
-        std::vector<UINT8*> m_instancesConstantBufferCpuVisibleGpuPointers; // multiple for multiple buffering
+        std::vector<std::shared_ptr<Snd::Dx12::Buffer>> m_instancesBufferGpuData{}; // multiple for multiple buffering
+        std::vector<UINT8*> m_instancesBufferCpuVisibleGpuPointers; // multiple for multiple buffering
     };
 
     StaticModelRenderer::StaticModelRenderer(const HWND& hwnd, uint32_t displayWidth, uint32_t displayHeight)
@@ -102,12 +100,13 @@ namespace Crv
 
     void StaticModelRenderer::Impl::init()
     {
+        // resource creation
         {
             m_descriptorHeap = std::make_unique<Snd::Dx12::DescriptorHeap>(
-               "HelloTriangle input Descriptor",
+               "StaticModelRenderer Input Descriptor",
                   *m_context.getDevice(),
                   Snd::Dx12::DescriptorHeapType::CbvSrvUav,
-                  Snd::Dx12::Context::getFrameCount(), // multiple constant buffers for multiple buffering
+                  Snd::Dx12::Context::getFrameCount() * 2, // multiple constant buffers for multiple buffering
                   true);
 
 
@@ -116,31 +115,54 @@ namespace Crv
 
             for (int i = 0; i < Snd::Dx12::Context::getFrameCount(); ++i)
             {
-                m_cameraConstantBufferGpuData[i] = std::make_shared<Snd::Dx12::Buffer>(
-                                    "ConstantBuffer",
+                // creation of camera resource
+                {
+                    m_cameraConstantBufferGpuData[i] = std::make_shared<Snd::Dx12::Buffer>(
+                                       "Camera Buffer",
+                                       *m_context.getDevice(),
+                                       Snd::Dx12::ResourceHeapType::Upload,
+                                       Snd::Dx12::ResourceFlag::None,
+                                       Snd::Dx12::ResourceState::Common,
+                                       sizeof(CameraCpuData), 1);
+
+                    m_cameraConstantBufferGpuData[i]->map(0, 0, reinterpret_cast<void**>(&m_cameraConstantBufferCpuVisibleGpuPointers[i]));
+                    memcpy(m_cameraConstantBufferCpuVisibleGpuPointers[i], &m_constantBufferCpuData, sizeof(m_constantBufferCpuData));
+                    m_cameraConstantBufferGpuData[i]->unmap();
+
+                    m_descriptorHeap->newConstantBufferView(*m_context.getDevice(), *m_cameraConstantBufferGpuData[i], i);
+                }
+
+                // creation of instances data
+                {
+                    m_instancesBufferGpuData[i] = std::make_shared<Snd::Dx12::Buffer>(
+                                    "InstancesData Buffer",
                                     *m_context.getDevice(),
                                     Snd::Dx12::ResourceHeapType::Upload,
                                     Snd::Dx12::ResourceFlag::None,
                                     Snd::Dx12::ResourceState::Common,
-                                    sizeof(CameraCpuData), 1);
+                                    sizeof(ModelInstanceData), s_cMaxInstanceCount);
 
-                m_cameraConstantBufferGpuData[i]->map(0, 0, reinterpret_cast<void**>(&m_cameraConstantBufferCpuVisibleGpuPointers[i]));
-                memcpy(m_cameraConstantBufferCpuVisibleGpuPointers[i], &m_constantBufferCpuData, sizeof(m_constantBufferCpuData));
-                m_cameraConstantBufferGpuData[i]->unmap();
-
-                m_descriptorHeap->newConstantBufferView(*m_context.getDevice(), *m_cameraConstantBufferGpuData[i], i);
+                    m_descriptorHeap->newShaderResourceView( *m_context.getDevice(), *m_instancesBufferGpuData[i], i + Snd::Dx12::Context::getFrameCount());
+                }
             }
         }
 
+        // root signature
         {
             const std::vector inputTableParameterCbv
             {
                 Snd::Dx12::DescriptorTableParameter{Snd::Dx12::DescriptorTableParameterType::Cbv, 1, 0},
             };
 
+            const std::vector inputTableParameterSrv
+            {
+                Snd::Dx12::DescriptorTableParameter{Snd::Dx12::DescriptorTableParameterType::Srv, 1, 0},
+            };
+
             std::vector rootParameters
             {
                 Snd::Dx12::RootParameter{Snd::Dx12::RootParameterType::Table, Snd::Dx12::ShaderVisibility::Vertex, inputTableParameterCbv},
+                Snd::Dx12::RootParameter{Snd::Dx12::RootParameterType::Table, Snd::Dx12::ShaderVisibility::Vertex, inputTableParameterSrv}
             };
 
             Snd::Dx12::StaticSamplers samplers;
@@ -175,6 +197,8 @@ namespace Crv
 
             m_pipelineState = std::make_unique<Snd::Dx12::PipelineState>("StaticModel PipelineState", *m_context.getDevice(), graphicsPipelineDesc);
         }
+
+        m_context.init();
     }
 
     void StaticModelRenderer::Impl::onResizeWindow(const uint32_t width, const uint32_t height) const
@@ -187,7 +211,8 @@ namespace Crv
         m_constantBufferCpuData.m_projectionMatrix = projectionMatrix;
         m_constantBufferCpuData.m_viewMatrix = viewMatrix;
 
-        m_cameraConstantBufferGpuData[m_context.getFrameIndex()]->map(0, 0, reinterpret_cast<void**>(&m_cameraConstantBufferCpuVisibleGpuPointers[m_context.getFrameIndex()]));
+        m_cameraConstantBufferGpuData[m_context.getFrameIndex()]->map(0, 0,
+            reinterpret_cast<void**>(&m_cameraConstantBufferCpuVisibleGpuPointers[m_context.getFrameIndex()]));
         memcpy(m_cameraConstantBufferCpuVisibleGpuPointers[m_context.getFrameIndex()], &m_constantBufferCpuData,
                sizeof(m_constantBufferCpuData));
         m_cameraConstantBufferGpuData[m_context.getFrameIndex()]->unmap();
@@ -195,98 +220,87 @@ namespace Crv
 
     void StaticModelRenderer::Impl::update(float dt)
     {
+        m_instancesBufferGpuData[m_context.getFrameIndex()]->map(0, 0,
+            reinterpret_cast<void**>(&m_instancesBufferCpuVisibleGpuPointers[m_context.getFrameIndex()]));
+        memcpy(m_instancesBufferCpuVisibleGpuPointers[m_context.getFrameIndex()], m_instanceDatas.data(),
+               sizeof(ModelInstanceData) * m_instanceDatas.size());
+        m_cameraConstantBufferGpuData[m_context.getFrameIndex()]->unmap();
     }
 
-    void StaticModelRenderer::Impl::render() const
+    void StaticModelRenderer::Impl::render()
     {
-        for (const auto &model: m_models | std::views::values)
+        m_context.preRecording();
+        m_context.clearBackBufferColor();
+
+        m_context.bindRootSignature(*m_rootSignature);
+        m_context.bindPipelineState(*m_pipelineState);
+
+        const std::vector heaps { *m_descriptorHeap };
+        m_context.setDescriptorHeaps(heaps);
+
+        m_context.setGraphicsRootDescriptorTable(0, *m_descriptorHeap, m_context.getFrameIndex());
+        m_context.setGraphicsRootDescriptorTable(0, *m_descriptorHeap, m_context.getFrameIndex()+2);
+
+        m_context.setTopologyTypeTriangleList(Snd::Dx12::PrimitiveTopology::TriangleList);
+
+        for(const auto& mesh : m_registeredStaticModel.m_staticModel.m_meshes)
         {
-            for (const auto& mesh : model.m_staticModel.m_meshes)
-            {
-                m_context.drawIndexedInstanced(
-                    mesh.getIndexBufferCpuData().size(),
-                    model.m_instanceCount,
-                    0,
-                    0,
-                    0);
-            }
+            m_context.bindVertexBufferView(*mesh.getVertexBufferView());
+            m_context.bindIndexBufferView(*mesh.getIndexBufferView());
+
+            m_context.drawIndexedInstanced(
+                mesh.getIndexBufferCpuData().size(),
+                m_registeredStaticModel.m_instanceCount,
+                0,
+                0,
+                0);
         }
+
+        m_context.postRecording();
+        m_context.flush();
+        m_context.moveToNextFrame();
     }
 
-    void StaticModelRenderer::Impl::registerModel(StaticModelCreateInfo modelInfo)
+    void StaticModelRenderer::Impl::changeModel(const StaticModelCreateInfo &modelInfo)
     {
-        if (const auto it = m_modelToInstances.find(modelInfo.m_name); it != m_modelToInstances.end())
-        {
-            NOMAD_LOG(Nmd::LogLevel::Warning, "Trying to register a model already registered {}", modelInfo.m_name);
-            return;
-        }
-
-        RegisteredStaticModel registeredModel;
-
-        registeredModel.m_staticModel.m_name = modelInfo.m_name;
+        m_registeredStaticModel.m_staticModel.m_meshes.clear();
+        m_registeredStaticModel.m_staticModel.m_meshes.reserve(modelInfo.m_meshes.size());
 
         for (const auto& meshInfo : modelInfo.m_meshes)
         {
-            StaticMesh mesh{m_context, meshInfo.m_name, meshInfo.m_verticesInfo};
-            registeredModel.m_staticModel.m_meshes.emplace_back(mesh);
-            m_context.upload(mesh.getVertexBuffer(), mesh.getVertexBufferCpuData());
+            m_registeredStaticModel.m_staticModel.m_meshes.emplace_back( m_context, meshInfo.m_name, meshInfo.m_verticesInfo );
+            const StaticMesh& meshToUpload = m_registeredStaticModel.m_staticModel.m_meshes.back();
+            m_context.upload(meshToUpload.getVertexBuffer(), meshToUpload.getVertexBufferCpuData());
+            m_context.upload(meshToUpload.getIndexBuffer(), meshToUpload.getIndexBufferCpuData().data());
         }
-
-        m_models[modelInfo.m_name] = registeredModel;
-
     }
 
-    void StaticModelRenderer::Impl::unregisterModel(const std::string &name)
+    uint32_t StaticModelRenderer::Impl::addModelInstance(const DirectX::XMFLOAT4X4 &modelMatrix)
     {
-        const auto& it = m_models.find(name);
-        if (it == m_models.end())
+        m_instanceDatas.emplace_back(modelMatrix);
+        return m_instanceDatas.size() - 1;
+    }
+
+    void StaticModelRenderer::Impl::removeModelInstance(const uint32_t instanceId)
+    {
+        if (m_instanceDatas.size() <= instanceId)
         {
-            NOMAD_LOG(Nmd::LogLevel::Warning, "Trying to unregister a model that is not registered");
+            NOMAD_LOG(Nmd::LogLevel::Warning, "Trying to remove a instance that cant exists");
             return;
         }
+        auto& it = m_instanceDatas.at(instanceId);
 
-        m_models.erase(it);
-        it->second.m_instanceCount--;;
+        std::swap(it, m_instanceDatas.back());
+        m_instanceDatas.pop_back();
     }
 
-    uint32_t StaticModelRenderer::Impl::addModelInstance(const std::string& modelName, const DirectX::XMFLOAT4X4& modelMatrix)
+    void StaticModelRenderer::Impl::setTransformStaticModelInstance(const uint32_t instanceId,
+                                                                    const DirectX::XMFLOAT4X4 &modelMatrix)
     {
-        const auto it = m_modelToInstances.find(modelName);
-
-        NOMAD_ASSERT(Nmd::AssertType::Assert, it != m_modelToInstances.end(), "Model name not found in m_modelToInstances.");
-
-        auto& transforms = it->second;
-        transforms.emplace_back(modelMatrix);
-
-        m_models[modelName].m_instanceCount++;
-
-        NOMAD_ASSERT(Nmd::AssertType::Assert, m_models[modelName].m_instanceCount == transforms.size(), "Something went wrong with instance counting");
-
-        return static_cast<uint32_t>(transforms.size() - 1);
+        ModelInstanceData &instanceData = m_instanceDatas[instanceId];
+        instanceData.m_transforms = modelMatrix;
     }
 
-    void StaticModelRenderer::Impl::removeModelInstance(const std::string& m_modelName, const uint32_t instanceId)
-    {
-        const auto it = m_modelToInstances.find(m_modelName);
-        NOMAD_ASSERT(Nmd::AssertType::Assert, it != m_modelToInstances.end(), "Invalid instanceId: Out of range for the model's transforms.");
-
-        auto& transforms = it->second;
-        NOMAD_ASSERT(Nmd::AssertType::Assert, instanceId < transforms.size(), "Invalid instanceId: Out of range for the model's transforms.");
-
-        if (instanceId != transforms.size() - 1)
-        {
-            std::swap(transforms[instanceId], transforms.back());
-        }
-
-        transforms.pop_back();
-    }
-
-    void StaticModelRenderer::Impl::setTransformStaticModelInstance(const std::string &m_modelName, const uint32_t instanceId,
-        const DirectX::XMFLOAT4X4 &modelMatrix)
-    {
-        const ModelInstanceData modelInstanceData{modelMatrix};
-        m_modelToInstances[m_modelName][instanceId] = modelInstanceData;
-    }
 
     StaticModelRenderer::~StaticModelRenderer() = default;
 
@@ -311,39 +325,34 @@ namespace Crv
     {
     }
 
-    void StaticModelRenderer::render() const
+    // ReSharper disable once CppMemberFunctionMayBeConst
+    void StaticModelRenderer::render()
     {
         m_impl->render();
     }
 
     // ReSharper disable once CppMemberFunctionMayBeConst
-    void StaticModelRenderer::registerModel(const StaticModelCreateInfo &modelInfo)
+    void StaticModelRenderer::changeModel(const StaticModelCreateInfo &modelInfo)
     {
-        m_impl->registerModel(modelInfo);
+        m_impl->changeModel(modelInfo);
     }
 
     // ReSharper disable once CppMemberFunctionMayBeConst
-    void StaticModelRenderer::unregisterModel(const std::string &name)
+    uint32_t StaticModelRenderer::addModelInstance(const DirectX::XMFLOAT4X4 &modelMatrix)
     {
-        m_impl->unregisterModel(name);
+        return m_impl->addModelInstance(modelMatrix);
     }
 
     // ReSharper disable once CppMemberFunctionMayBeConst
-    uint32_t StaticModelRenderer::addModelInstance(const std::string &m_modelName, DirectX::XMFLOAT4X4 modelMatrix)
+    void StaticModelRenderer::removeModelInstance(const uint32_t instanceId)
     {
-        return m_impl->addModelInstance(m_modelName, modelMatrix);
+        return m_impl->removeModelInstance(instanceId);
     }
 
     // ReSharper disable once CppMemberFunctionMayBeConst
-    void StaticModelRenderer::removeModelInstance(const std::string &m_modelName, uint32_t instanceId)
-    {
-        return m_impl->removeModelInstance(m_modelName, instanceId);
-    }
-
-    // ReSharper disable once CppMemberFunctionMayBeConst
-    void StaticModelRenderer::setTransformStaticModelInstance(const std::string& m_modelName, const uint32_t instanceId,
+    void StaticModelRenderer::setTransformStaticModelInstance(const uint32_t instanceId,
         const DirectX::XMFLOAT4X4 &modelMatrix)
     {
-        return m_impl->setTransformStaticModelInstance(m_modelName, instanceId, modelMatrix);
+        return m_impl->setTransformStaticModelInstance(instanceId, modelMatrix);
     }
 }
