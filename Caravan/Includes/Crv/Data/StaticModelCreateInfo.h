@@ -7,11 +7,11 @@ namespace Crv
 {
     struct GeometryBufferCreateInfo
     {
-        void* m_vertexBuffer;
+        const void* m_vertexBuffer;
         UINT m_vertexSize;
         UINT m_vertexCount;
 
-        std::vector<uint16_t> m_indices;
+        std::vector<uint32_t> m_indices;
     };
 
     struct StaticMeshCreateInfo

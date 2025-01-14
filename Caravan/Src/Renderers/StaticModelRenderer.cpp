@@ -54,9 +54,12 @@ namespace Crv
 
         struct CameraCpuData
         {
-            DirectX::XMFLOAT4X4 m_viewMatrix;
-            DirectX::XMFLOAT4X4 m_projectionMatrix;
+            DirectX::XMFLOAT4X4 m_viewMatrix = DirectX::XMFLOAT4X4();
+            DirectX::XMFLOAT4X4 m_projectionMatrix = DirectX::XMFLOAT4X4();
+            float m_padding[32] = {}; // 128 bytes of padding (32 floats * 4 bytes per float)
         };
+        static_assert((sizeof(CameraCpuData) % 256) == 0, "Constant Buffer size must be 256-byte aligned");
+
 
         struct RegisteredStaticModel
         {
@@ -112,6 +115,8 @@ namespace Crv
 
             m_cameraConstantBufferCpuVisibleGpuPointers.resize(Snd::Dx12::Context::getFrameCount());
             m_cameraConstantBufferGpuData.resize(Snd::Dx12::Context::getFrameCount());
+            m_instancesBufferGpuData.resize(Snd::Dx12::Context::getFrameCount());
+            m_instancesBufferCpuVisibleGpuPointers.resize(Snd::Dx12::Context::getFrameCount());
 
             for (int i = 0; i < Snd::Dx12::Context::getFrameCount(); ++i)
             {

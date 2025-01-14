@@ -74,7 +74,7 @@ namespace Crv
         return m_indexBuffer;
     }
 
-    const std::vector<uint16_t> & StaticMesh::getIndexBufferCpuData() const
+    const std::vector<uint32_t> & StaticMesh::getIndexBufferCpuData() const
     {
         return m_indexCpuData;
     }

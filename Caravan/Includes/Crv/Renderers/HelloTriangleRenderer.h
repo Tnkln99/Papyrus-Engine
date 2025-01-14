@@ -49,8 +49,8 @@ namespace Crv
 			DirectX::XMFLOAT4 m_position{};
 			DirectX::XMFLOAT2 m_uv{};
 		};
-		const std::vector<uint16_t> m_indices =	{0, 1, 2, // First triangle (Top-left, Top-right, Bottom-right)
-										0, 2, 3}; // Second triangle (Top-left, Bottom-right, Bottom-left);
+		const std::vector<uint32_t> m_indices =	{0, 1, 2, // First triangle (Top-left, Top-right, Bottom-right)
+												0, 2, 3}; // Second triangle (Top-left, Bottom-right, Bottom-left);
 
 		std::unique_ptr<StaticMesh> m_triangleMesh;
 

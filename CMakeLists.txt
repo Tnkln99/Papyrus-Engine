@@ -6,6 +6,8 @@ project(Papyrus LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build static libraries" FORCE)
+
 add_subdirectory(Externals)
 
 add_subdirectory(Nomad)
@@ -14,7 +16,4 @@ add_subdirectory(Merchant)
 add_subdirectory(Caravan)
 add_subdirectory(Oasis)
 
-add_executable(Papyrus "Papyrus.cpp")
-
-# Linking against Sand
-target_link_libraries(Papyrus PRIVATE Merchant Nomad Caravan Oasis)
+add_subdirectory(Samples)

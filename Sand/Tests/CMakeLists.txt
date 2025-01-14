@@ -10,7 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_executable(SandTests)
 
 # Collect all source files in the scr directory
-file(GLOB_RECURSE SOURCES "Src/*.cpp" "Src/*.h")
+file(GLOB_RECURSE SOURCES "Src/*.cpp")
 
 # Add sources
 target_sources(SandTests PRIVATE ${SOURCES})

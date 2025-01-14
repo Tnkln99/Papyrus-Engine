@@ -9,7 +9,7 @@ namespace Snd::Dx12
     {
         m_indexBufferView.BufferLocation = buffer->getGpuVirtualAddress();
         m_indexBufferView.SizeInBytes = buffer->getElementCount() * buffer->getElementSize();
-        m_indexBufferView.Format = DXGI_FORMAT_R16_UINT;  // Use DXGI_FORMAT_R32_UINT for 32-bit indices
+        m_indexBufferView.Format = DXGI_FORMAT_R32_UINT;  // Use DXGI_FORMAT_R32_UINT for 32-bit indices
     }
 
     D3D12_INDEX_BUFFER_VIEW IndexBufferView::getDxBufferView() const
