@@ -88,6 +88,17 @@ namespace Os::Wnd
                     }
                     break;
                 }
+                case WM_KEYDOWN:
+                {
+                    if (pThis->m_messageCallback)
+                    {
+                        Message msg = { MessageType::KeyDown };
+                        msg.m_keyId = static_cast<uint8_t>(wParam);
+
+                        pThis->m_messageCallback(msg);
+                    }
+                    break;
+                }
                 case WM_DESTROY:
                 {
                     if (pThis->m_messageCallback)

@@ -9,6 +9,7 @@ namespace Os
     {
         Paint,
         Resize,
+        KeyDown,
         Close
     };
 
@@ -22,6 +23,8 @@ namespace Os
                 int m_width;
                 int m_height;
             } m_resize;
+
+            uint8_t m_keyId;
         };
     };
 
