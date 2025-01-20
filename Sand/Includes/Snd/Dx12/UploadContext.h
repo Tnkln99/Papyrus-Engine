@@ -3,8 +3,6 @@
 #include <memory>
 #include <vector>
 
-#include "Buffer.h"
-
 namespace Snd::Dx12
 {
 	class Buffer;
@@ -32,14 +30,14 @@ namespace Snd::Dx12
 		struct BufferToUpload
 		{
 			std::weak_ptr<Buffer> m_buffer;
-			std::unique_ptr<Buffer> m_uploadBuffer;
+			std::shared_ptr<Buffer> m_uploadBuffer;
 			const void* m_data;
 		};
 
 		struct TextureToUpload
 		{
 			std::weak_ptr<Texture2D> m_texture;
-			std::unique_ptr<Buffer> m_uploadBuffer;
+			std::shared_ptr<Buffer> m_uploadBuffer;
 			const void* m_data;
 		};
 

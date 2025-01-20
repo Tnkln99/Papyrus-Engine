@@ -66,22 +66,10 @@ namespace Snd::Dx12
 		device.getDxDevice()->CreateConstantBufferView(&cbvDesc, hCpu(index));
 	}
 
-    void DescriptorHeap::newShaderResourceView(const Device &device, const Texture2D &texture, const UINT index) const
+	void DescriptorHeap::newShaderResourceView(const Device &device, const Buffer &buffer, const UINT index) const
 	{
-		NOMAD_ASSERT(Nmd::AssertType::Assert, m_desc.Type == D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, "Descriptor type is not correct ");
-
-		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		srvDesc.Format = static_cast<DXGI_FORMAT>(texture.getFormat());
-		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-		srvDesc.Texture2D.MipLevels = texture.getSampleCount();
-
-		device.getDxDevice()->CreateShaderResourceView(texture.getDxResource().Get(), &srvDesc, hCpu(index));
-	}
-
-	void DescriptorHeap::newShaderResourceView(const Device &device, const Buffer &buffer, UINT index) const
-	{
-		NOMAD_ASSERT(Nmd::AssertType::Assert, m_desc.Type == D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, "Descriptor type is not correct");
+		NOMAD_ASSERT(Nmd::AssertType::Assert,
+			m_desc.Type == D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, "Descriptor type is not correct");
 
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -95,4 +83,30 @@ namespace Snd::Dx12
 		device.getDxDevice()->CreateShaderResourceView(buffer.getDxResource().Get(), &srvDesc, hCpu(index));
 	}
 
+	void DescriptorHeap::newShaderResourceView(const Device &device, const Texture2D &texture, const UINT index) const
+	{
+		NOMAD_ASSERT(Nmd::AssertType::Assert,
+			m_desc.Type == D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, "Descriptor type is not correct ");
+
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		srvDesc.Format = static_cast<DXGI_FORMAT>(texture.getFormat());
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MipLevels = texture.getSampleCount();
+
+		device.getDxDevice()->CreateShaderResourceView(texture.getDxResource().Get(), &srvDesc, hCpu(index));
+	}
+
+	void DescriptorHeap::newDepthStencilView(const Device &device, const Texture2D &texture, const UINT index) const
+	{
+		NOMAD_ASSERT(Nmd::AssertType::Assert,
+					m_desc.Type == D3D12_DESCRIPTOR_HEAP_TYPE_DSV, "Descriptor type is not correct");
+
+		D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilDesc = {};
+		depthStencilDesc.Format = static_cast<DXGI_FORMAT>(texture.getFormat());
+		depthStencilDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+		depthStencilDesc.Flags = D3D12_DSV_FLAG_NONE;
+
+		device.getDxDevice()->CreateDepthStencilView(texture.getDxResource().Get(), &depthStencilDesc, hCpu(index));
+	}
 }

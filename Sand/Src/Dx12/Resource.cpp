@@ -10,8 +10,8 @@
 
 namespace Snd::Dx12
 {
-	Resource::Resource(const std::string& name, const ResourceState state, const ResourceHeapType heaptype, const ResourceFlag::Type flags)
-					: Object{std::move(name)}, m_heapType(heaptype), m_state{ state } ,m_flags{ flags } { }
+	Resource::Resource(const std::string& name, const ResourceState state, const ResourceHeapType heaptype, const ResourceFlag::Type flags, const HeapFlag::Type heapFlag)
+					: Object{std::move(name)}, m_heapType(heaptype), m_state{ state } ,m_flags{ flags }, m_heapFlags { heapFlag } {}
 
 	Microsoft::WRL::ComPtr<ID3D12Resource> Resource::getDxResource() const
 	{

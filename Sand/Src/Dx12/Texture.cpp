@@ -21,6 +21,7 @@ namespace Snd::Dx12
         const UINT width,
         const UINT height,
         const TextureFormat format,
+        const bool doesUseClearValue,
         const ResourceState initialState,
         const UINT16 mipLevels,
         const UINT16 arraySize,
@@ -56,15 +57,34 @@ namespace Snd::Dx12
         heapProps.CreationNodeMask = 1;
         heapProps.VisibleNodeMask = 1;
 
-        // Create the texture resource
-        ThrowIfFailed(device.getDxDevice()->CreateCommittedResource(
-            &heapProps,
-            static_cast<D3D12_HEAP_FLAGS>(m_flags),
-            &texDesc,
-            static_cast<D3D12_RESOURCE_STATES>(m_state),
-            nullptr, // Usually null for non-RT/DS textures unless a clear value is needed
-            IID_PPV_ARGS(&m_resource)
-        ));
+        if (!doesUseClearValue)
+        {
+        	ThrowIfFailed(device.getDxDevice()->CreateCommittedResource(
+				&heapProps,
+				static_cast<D3D12_HEAP_FLAGS>(m_heapFlags),
+				&texDesc,
+				static_cast<D3D12_RESOURCE_STATES>(m_state),
+				nullptr,
+				IID_PPV_ARGS(&m_resource)
+			));
+        }
+		else
+		{
+			D3D12_CLEAR_VALUE depthOptimizedClearValue = {};
+			depthOptimizedClearValue.Format = static_cast<DXGI_FORMAT>(m_format);
+			depthOptimizedClearValue.DepthStencil.Depth = 1.0f;
+			depthOptimizedClearValue.DepthStencil.Stencil = 0;
+
+			ThrowIfFailed(device.getDxDevice()->CreateCommittedResource(
+				&heapProps,
+				static_cast<D3D12_HEAP_FLAGS>(m_heapFlags),
+				&texDesc,
+				static_cast<D3D12_RESOURCE_STATES>(m_state),
+				&depthOptimizedClearValue,
+				IID_PPV_ARGS(&m_resource)
+			));
+		}
+
 
         ThrowIfFailed(m_resource->SetName(stringToWstr(m_name).c_str()));
     }

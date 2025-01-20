@@ -62,14 +62,23 @@ namespace Snd::Dx12
 		ThrowIfFailed(m_commandList->Reset(allocator.getDxAllocator().Get(), nullptr));
 	}
 
-	void GraphicsCommandList::clearRenderTargetView(const DescriptorCpuHandle& cpuHandle, const FLOAT colorRgba[4]) const
+	void GraphicsCommandList::clearRenderTargetView(const DescriptorCpuHandle& rtvHandle, const FLOAT colorRgba[4]) const
 	{
-		m_commandList->ClearRenderTargetView(cpuHandle, colorRgba, 0, nullptr);
+		m_commandList->ClearRenderTargetView(rtvHandle, colorRgba, 0, nullptr);
 	}
 
-	void GraphicsCommandList::setRenderTarget(const DescriptorCpuHandle& cpuHandle) const
+	void GraphicsCommandList::clearDepthStencilView(const DescriptorCpuHandle &dsvHandle) const
 	{
-		m_commandList->OMSetRenderTargets(1, &cpuHandle, FALSE, nullptr);
+		m_commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	}
+
+	void GraphicsCommandList::setRenderTarget(const DescriptorCpuHandle& renderTargetViewHandle, const DescriptorCpuHandle& depthStencilHandle) const
+	{
+		m_commandList->OMSetRenderTargets(
+			1,
+			&renderTargetViewHandle,
+			FALSE,
+			&depthStencilHandle);
 	}
 
 	void GraphicsCommandList::setTopologyTypeTriangleList(PrimitiveTopology topology) const

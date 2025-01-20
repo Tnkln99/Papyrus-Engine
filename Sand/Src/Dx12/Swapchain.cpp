@@ -47,9 +47,13 @@ namespace Snd::Dx12
         updateFrameIndex();
 
         m_rtvHandle = std::make_unique<DescriptorHeap>("Swapchain rtv heap", *device, DescriptorHeapType::Rtv, c_sFrameCount);
+        m_dsvHandle = std::make_unique<DescriptorHeap>("Swapchain dsv heap", *device, DescriptorHeapType::Dsv, c_sFrameCount);
 
-        m_renderTargets.resize(c_sFrameCount);
+	    m_renderTargets.resize(c_sFrameCount);
+	    m_depthStencils.resize(c_sFrameCount);
+
         createRenderTargets();
+	    createDepthResources();
 
         m_fence = std::make_unique<Fence>("Swapchain frame fence", *device);
 	}
@@ -60,9 +64,10 @@ namespace Snd::Dx12
     {
         waitGpu();
         setFenceValuesToCurrentFrame();
-        resetRenderTargets();
+        reset();
         resizeBuffers(width, height);
         createRenderTargets();
+        createDepthResources();
         updateFrameIndex();
     }
 
@@ -108,13 +113,17 @@ namespace Snd::Dx12
     void Swapchain::setCurrentBufferAsRenderTarget(const GraphicsCommandList& commandList) const
     {
         const DescriptorCpuHandle rtvHandle = m_rtvHandle->hCpu(m_frameIndex);
-        commandList.setRenderTarget(rtvHandle);
+        const DescriptorCpuHandle dsvHandle = m_dsvHandle->hCpu(m_frameIndex);
+        commandList.setRenderTarget(rtvHandle, dsvHandle);
     }
 
-    void Swapchain::clearColor(const GraphicsCommandList& commandList, const float clearColor[]) const
+    void Swapchain::clear(const GraphicsCommandList& commandList, const float clearColor[]) const
     {
         const DescriptorCpuHandle rtvHandle = m_rtvHandle->hCpu(m_frameIndex);
+        const DescriptorCpuHandle dsvHandle = m_dsvHandle->hCpu(m_frameIndex);
+
         commandList.clearRenderTargetView(rtvHandle, clearColor);
+        commandList.clearDepthStencilView(dsvHandle);
     }
 
     Microsoft::WRL::ComPtr<IDXGISwapChain3> Swapchain::getDxSwapchain() const
@@ -137,11 +146,40 @@ namespace Snd::Dx12
         }
     }
 
-    void Swapchain::resetRenderTargets()
+    void Swapchain::createDepthResources()
+    {
+        checkExpired();
+
+        Microsoft::WRL::ComPtr<ID3D12Resource> res;
+        ThrowIfFailed(m_swapchain->GetBuffer(0, IID_PPV_ARGS(&res)));
+
+        auto height = res->GetDesc().Height;
+        auto width = res->GetDesc().Width;
+
+        for (UINT i = 0; i < c_sFrameCount; i++)
+        {
+            std::string name = "Swapchain dsv" + std::to_string(i);
+            m_depthStencils[i] = std::make_unique<Texture2D>(
+                name,
+                *m_device.lock(),
+                ResourceHeapType::Default,
+                ResourceFlag::AllowDepthStencil,
+                width,
+                height,
+                TextureFormat::D32Float,
+                true,
+                ResourceState::DepthStencilResource);
+
+            m_dsvHandle->newDepthStencilView(*m_device.lock(), *m_depthStencils[i], i);
+        }
+    }
+
+    void Swapchain::reset()
     {
         for (UINT i = 0; i < c_sFrameCount; i++)
         {
             m_renderTargets[i].reset();
+            m_depthStencils[i].reset();
         }
     }
 

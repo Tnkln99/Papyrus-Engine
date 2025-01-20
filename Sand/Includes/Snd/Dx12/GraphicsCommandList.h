@@ -43,9 +43,10 @@ namespace Snd::Dx12
 		void close() const;
 		void reset(const CommandAllocator& allocator) const;
 
-		void clearRenderTargetView(const DescriptorCpuHandle& cpuHandle, const FLOAT ColorRGBA[4]) const;
+		void clearRenderTargetView(const DescriptorCpuHandle& rtvHandle, const FLOAT ColorRGBA[4]) const;
+		void clearDepthStencilView(const DescriptorCpuHandle& dsvHandle) const;
 
-		void setRenderTarget(const DescriptorCpuHandle& cpuHandle) const;
+		void setRenderTarget(const DescriptorCpuHandle& renderTargetViewHandle, const DescriptorCpuHandle& depthStencilHandle) const;
 		void setTopologyTypeTriangleList(PrimitiveTopology topology) const;
 		void setViewports(const Viewport& viewport) const;
 		void setScissorRects(const ScissorRect& scissorRect) const;

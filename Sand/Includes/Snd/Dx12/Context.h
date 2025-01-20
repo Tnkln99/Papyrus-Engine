@@ -47,7 +47,7 @@ namespace Snd::Dx12
 
 		void bindRootSignature(const RootSignature& rootSignature) const;
 		void bindPipelineState(const PipelineState& pipelineState) const;
-		void setTopologyTypeTriangleList(PrimitiveTopology topology) const;
+		void setTopology(PrimitiveTopology topology) const;
 		void bindVertexBufferView(const VertexBufferView& view) const;
 		void bindIndexBufferView(const IndexBufferView& view) const;
 		void drawInstanced(
@@ -70,7 +70,7 @@ namespace Snd::Dx12
 		                ResourceBarrierType type = ResourceBarrierType::Transition) const;
 #pragma endregion
 
-		void clearBackBufferColor() const;
+		void clear() const;
 		void postRecording() const;
 
 		void flush() const;

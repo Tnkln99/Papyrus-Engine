@@ -20,6 +20,14 @@ namespace Snd::Dx12
 		};
 	};
 
+	struct HeapFlag
+	{
+		enum Type : unsigned int
+		{
+			None =	D3D12_HEAP_FLAG_NONE
+		};
+	};
+
 	enum class ResourceHeapType
 	{
 		Default =	D3D12_HEAP_TYPE_DEFAULT,
@@ -36,6 +44,7 @@ namespace Snd::Dx12
 		CopySource =				D3D12_RESOURCE_STATE_COPY_SOURCE,
 		GenericRead =				D3D12_RESOURCE_STATE_GENERIC_READ,
 		PixelShaderResource =		D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+		DepthStencilResource =		D3D12_RESOURCE_STATE_DEPTH_WRITE,
 	};
 
 	enum class ResourceBarrierType
@@ -61,7 +70,7 @@ namespace Snd::Dx12
 		virtual ~Resource() = default;
 	protected:
 		Resource() = default;
-		Resource(const std::string& name, ResourceState state, ResourceHeapType heaptype, ResourceFlag::Type flags);
+		Resource(const std::string& name, ResourceState state, ResourceHeapType heaptype, ResourceFlag::Type flags, HeapFlag::Type heapFlag = HeapFlag::None);
 
 	public:
 		void transition(
@@ -84,5 +93,6 @@ namespace Snd::Dx12
 		ResourceHeapType m_heapType;
 		ResourceState m_state;
 		ResourceFlag::Type m_flags;
+		HeapFlag::Type m_heapFlags;
 	};
 }

@@ -29,17 +29,16 @@ namespace Snd::Dx12
 	{
 		m_flushFlag = true;
 
-		m_buffersToUpload.push_back( {
-			buffer,
-			std::make_unique<Buffer>(
-				"Upload Buffer",
-				m_device,
-				ResourceHeapType::Upload,
-				ResourceFlag::None,
-				ResourceState::GenericRead,
-				buffer->getElementSize(),
-				buffer->getElementCount()),
-			data });
+		BufferToUpload bufferToUpload;
+
+		bufferToUpload.m_buffer = buffer;
+		bufferToUpload.m_data = data;
+
+		std::string uploadBufferName = "Upload Buffer for " + buffer->getName();
+		bufferToUpload.m_uploadBuffer = std::make_shared<Buffer>(uploadBufferName, m_device, ResourceHeapType::Upload,
+		ResourceFlag::None, ResourceState::GenericRead, buffer->getElementSize(), buffer->getElementCount());
+
+		m_buffersToUpload.push_back(bufferToUpload);
 	}
 
 	void UploadContext::registerTexture2DForUpload(const std::shared_ptr<Texture2D> &texture, const void *data)
@@ -48,17 +47,15 @@ namespace Snd::Dx12
 
 		const UINT64 requiredSize = texture->getRequiredIntermediateSize(0,1);
 
-		m_texturesToUpload.push_back( { texture,
-			std::make_unique<Buffer>
-		(
-			"Upload Buffer",
-			m_device,
-			ResourceHeapType::Upload,
-			ResourceFlag::None,
-			ResourceState::GenericRead,
-			requiredSize,
-			1
-		), data });
+		TextureToUpload textureToUpload;
+		textureToUpload.m_texture = texture;
+		textureToUpload.m_data = data;
+		std::string uploadBufferName = "Upload Buffer for " + texture->getName();
+		textureToUpload.m_uploadBuffer = std::make_shared<Buffer>(uploadBufferName, m_device,
+																ResourceHeapType::Upload, ResourceFlag::None,
+																ResourceState::GenericRead, requiredSize, 1);
+
+		m_texturesToUpload.push_back(textureToUpload);
 	}
 
 	void UploadContext::uploadBuffer(const BufferToUpload& bufferToUpload) const
@@ -118,20 +115,20 @@ namespace Snd::Dx12
 
 		start();
 
-		for (const auto& buffer : m_buffersToUpload)
+		for (const auto& bufferToUpload : m_buffersToUpload)
 		{
-			uploadBuffer(buffer);
+			uploadBuffer(bufferToUpload);
 		}
 
-		for (const auto& texture : m_texturesToUpload)
+		for (const auto& textureToUpload : m_texturesToUpload)
 		{
-			uploadTexture2D(texture);
+			uploadTexture2D(textureToUpload);
 		}
 
 		end();
 
-		m_texturesToUpload.clear();
 		m_buffersToUpload.clear();
+		m_texturesToUpload.clear();
 
 		m_flushFlag = false;
 	}

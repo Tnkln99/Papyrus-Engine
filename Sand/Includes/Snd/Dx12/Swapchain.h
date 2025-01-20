@@ -13,6 +13,7 @@ namespace Snd::Dx12
 	class DescriptorHeap;
 	class Fence;
 	class GraphicsCommandList;
+	class Texture2D;
 
 	class Swapchain
 	{
@@ -36,7 +37,7 @@ namespace Snd::Dx12
 		void swapCurrentBufferState(const GraphicsCommandList& commandList, ResourceState afterState) const;
 		void setCurrentBufferAsRenderTarget(const GraphicsCommandList& commandList) const;
 
-		void clearColor(const GraphicsCommandList& commandList, const float clearColor[]) const;
+		void clear(const GraphicsCommandList& commandList, const float clearColor[]) const;
 
 		[[nodiscard]] Microsoft::WRL::ComPtr<IDXGISwapChain3> getDxSwapchain() const;
 		[[nodiscard]] bool isValid() const;
@@ -46,7 +47,9 @@ namespace Snd::Dx12
 		void updateFrameIndex();
 
 		void createRenderTargets();
-		void resetRenderTargets();
+		void createDepthResources();
+
+		void reset();
 		void setFenceValuesToCurrentFrame();
 		void resizeBuffers(UINT width, UINT height) const;
 
@@ -64,6 +67,9 @@ namespace Snd::Dx12
 
 		std::unique_ptr<DescriptorHeap> m_rtvHandle;
 		std::vector<std::unique_ptr<SwapchainRenderTarget>> m_renderTargets;
+
+		std::unique_ptr<DescriptorHeap> m_dsvHandle;
+		std::vector<std::unique_ptr<Texture2D>> m_depthStencils;
 		
 		std::unique_ptr<Fence> m_fence;
 		UINT64 m_fenceValues[c_sFrameCount]{};

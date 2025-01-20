@@ -18,7 +18,7 @@ namespace Snd::Dx12
             D3D12_INPUT_ELEMENT_DESC elementDesc = {};
 
             elementDesc.SemanticName = attr.m_name.c_str();
-            UINT index = semanticIndexMap[attr.m_name]++;
+            const UINT index = semanticIndexMap[attr.m_name]++;
 
             elementDesc.SemanticIndex = index;
             elementDesc.InputSlot = attr.m_binding;
@@ -100,9 +100,9 @@ namespace Snd::Dx12
             D3D12_COLOR_WRITE_ENABLE_ALL,
         };
 
-        for (UINT i = 0; i < D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT; ++i)
+        for (auto & i : desc.RenderTarget)
         {
-            desc.RenderTarget[i] = defaultRenderTargetBlendDesc;
+            i = defaultRenderTargetBlendDesc;
         }
 
         return desc;
@@ -110,24 +110,29 @@ namespace Snd::Dx12
 
     D3D12_DEPTH_STENCIL_DESC ClassicGraphicsPipelineDescriptor::createDefaultDepthStencilDescriptor()
     {
+        // Define the default stencil operations
+        constexpr D3D12_DEPTH_STENCILOP_DESC defaultStencilOp =
+        {
+            D3D12_STENCIL_OP_KEEP,        // StencilFailOp
+            D3D12_STENCIL_OP_KEEP,        // StencilDepthFailOp
+            D3D12_STENCIL_OP_KEEP,        // StencilPassOp
+            D3D12_COMPARISON_FUNC_ALWAYS  // StencilFunc
+        };
+
+        // Initialize the descriptor
         D3D12_DEPTH_STENCIL_DESC depthStencilDesc = {};
 
-        depthStencilDesc.DepthEnable = FALSE;
+        depthStencilDesc.DepthEnable = TRUE;
         depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
         depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+
         depthStencilDesc.StencilEnable = FALSE;
         depthStencilDesc.StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK;
         depthStencilDesc.StencilWriteMask = D3D12_DEFAULT_STENCIL_WRITE_MASK;
 
-        depthStencilDesc.FrontFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
-        depthStencilDesc.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
-        depthStencilDesc.FrontFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
-        depthStencilDesc.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-
-        depthStencilDesc.BackFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
-        depthStencilDesc.BackFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
-        depthStencilDesc.BackFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
-        depthStencilDesc.BackFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+        // Assign the same stencil operation settings to both front and back
+        depthStencilDesc.FrontFace = defaultStencilOp;
+        depthStencilDesc.BackFace  = defaultStencilOp;
 
         return depthStencilDesc;
     }

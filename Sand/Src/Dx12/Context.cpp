@@ -101,7 +101,7 @@ namespace Snd::Dx12
         m_graphicsCommandList->bindPipelineState(pipelineState);
     }
 
-    void Context::setTopologyTypeTriangleList(const PrimitiveTopology topology) const
+    void Context::setTopology(const PrimitiveTopology topology) const
     {
         m_graphicsCommandList->setTopologyTypeTriangleList(topology);
     }
@@ -150,10 +150,10 @@ namespace Snd::Dx12
         resource->transition(*m_graphicsCommandList, afterState, subresource, flags, type);
     }
 
-    void Context::clearBackBufferColor() const
+    void Context::clear() const
     {
 	    constexpr float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
-        m_swapchain->clearColor(*m_graphicsCommandList, clearColor);
+        m_swapchain->clear(*m_graphicsCommandList, clearColor);
     }
 
     void Context::postRecording() const

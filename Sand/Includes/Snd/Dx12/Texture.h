@@ -50,6 +50,7 @@ namespace Snd::Dx12
 			UINT width,
 			UINT height,
 			TextureFormat format,
+			bool doesUseClearValue = false,
 			ResourceState initialState = ResourceState::GenericRead,
 			UINT16 mipLevels = 1,
 			UINT16 arraySize = 1,
