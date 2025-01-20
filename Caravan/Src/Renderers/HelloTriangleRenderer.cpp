@@ -73,6 +73,7 @@ namespace Crv
 				Snd::Dx12::ResourceFlag::None,
 				256, 256,
 				Snd::Dx12::TextureFormat::R8G8B8A8Unorm,
+				false,
 				Snd::Dx12::ResourceState::CopyDest);
 
 			m_context->upload(m_gpuTexture, m_cpuTextureData.data());
@@ -135,26 +136,24 @@ namespace Crv
 
 		// triangle mesh preparation
 		{
-			const float aspectRatio = static_cast<float>(m_displayWidth) / static_cast<float>(m_displayHeight);
-			SquareVertex squareVertices[] =
-			{
-				{ { -0.25f, 0.25f * aspectRatio, 0.0f, 1.0f }, { 0.0f, 0.0f } },
-				{ {  0.25f, 0.25f * aspectRatio, 0.0f, 1.0f }, { 1.0f, 0.0f } },
-				{ {  0.25f, -0.25f * aspectRatio, 0.0f, 1.0f }, { 1.0f, 1.0f } },
-				{ { -0.25f, -0.25f * aspectRatio, 0.0f, 1.0f }, { 0.0f, 1.0f } }
-			};
+			Generator::Mesh rectoMesh = Generator::createRectangle();
+
+			std::vector<uint8_t> vertexBuffer;
+
+			vertexBuffer.resize(rectoMesh.m_vertices.size() * sizeof(Generator::Vertex));
+			std::memcpy(vertexBuffer.data(), rectoMesh.m_vertices.data(), vertexBuffer.size());
 
 			GeometryBufferCreateInfo verticesInfo
 			{
-				squareVertices,
-				sizeof(SquareVertex),
+				vertexBuffer,
+				sizeof(Generator::Vertex),
 				4,
-				m_indices
+				rectoMesh.m_indices
 			};
 
 			m_triangleMesh = std::make_unique<StaticMesh>(*m_context, "TriangleMesh", verticesInfo);
-			m_context->upload(m_triangleMesh->getVertexBuffer(), m_triangleMesh->getVertexBufferCpuData());
 			m_context->upload(m_triangleMesh->getIndexBuffer(), m_triangleMesh->getIndexBufferCpuData().data());
+			m_context->upload(m_triangleMesh->getVertexBuffer(), m_triangleMesh->getVertexBufferCpuData().data());
 		}
 
 		m_context->init();
@@ -179,7 +178,7 @@ namespace Crv
 
 	void HelloTriangleRenderer::render() const {
 		m_context->preRecording();
-		m_context->clearBackBufferColor();
+		m_context->clear();
 
 		m_context->bindRootSignature(*m_helloTriangleRootSignature);
 		m_context->bindPipelineState(*m_helloTrianglePipeline);
@@ -190,7 +189,7 @@ namespace Crv
 		m_context->setGraphicsRootDescriptorTable(0, *m_inputDescriptorHeap, m_context->getFrameIndex());
 		m_context->setGraphicsRootDescriptorTable(1, *m_inputDescriptorHeap, 2);
 
-		m_context->setTopologyTypeTriangleList(Snd::Dx12::PrimitiveTopology::TriangleList);
+		m_context->setTopology(Snd::Dx12::PrimitiveTopology::TriangleList);
 		m_context->bindVertexBufferView(*m_triangleMesh->getVertexBufferView());
 		m_context->bindIndexBufferView(*m_triangleMesh->getIndexBufferView());
 		m_context->drawIndexedInstanced(

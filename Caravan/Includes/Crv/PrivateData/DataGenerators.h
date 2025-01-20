@@ -5,6 +5,16 @@
 
 namespace Crv::Generator
 {
+    struct alignas(16) Vertex  {
+        DirectX::XMFLOAT4 m_position;
+        DirectX::XMFLOAT2 m_uv;
+    };
+
+    struct Mesh {
+        std::vector<Vertex> m_vertices;
+        std::vector<uint32_t> m_indices;
+    };
+
     inline std::vector<UINT8> generateTextureData(const UINT textureWidth, const UINT textureHeight, const UINT texturePixelSize)
     {
         const UINT rowPitch = textureWidth * texturePixelSize;
@@ -38,6 +48,45 @@ namespace Crv::Generator
         }
 
         return data;
+    }
+
+    inline Mesh createRectangle() {
+        Mesh mesh;
+
+        // Define the vertices of the rectangle
+        constexpr Vertex v0 = {
+            { -0.5f,  0.5f, 0.0f, 1.0f }, // Position
+            {  0.0f,  0.0f }  // UV
+        };
+
+        constexpr Vertex v1 = {
+            {  0.5f,  0.5f, 0.0f, 1.0f }, // Position
+            {  1.0f,  0.0f }  // UV
+        };
+
+        constexpr Vertex v2 = {
+            { -0.5f, -0.5f, 0.0f, 1.0f }, // Position
+            {  0.0f,  1.0f }  // UV
+        };
+
+        constexpr Vertex v3 = {
+            {  0.5f, -0.5f, 0.0f, 1.0f }, // Position
+            {  1.0f,  1.0f }  // UV
+        };
+
+        // Add vertices to the list
+        mesh.m_vertices.push_back(v0);
+        mesh.m_vertices.push_back(v1);
+        mesh.m_vertices.push_back(v2);
+        mesh.m_vertices.push_back(v3);
+
+        // Define indices for two triangles
+        mesh.m_indices = {
+            0, 1, 2, // First triangle
+            2, 1, 3  // Second triangle
+        };
+
+        return mesh;
     }
 }
 

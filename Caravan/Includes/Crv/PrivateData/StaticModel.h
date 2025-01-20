@@ -24,14 +24,14 @@ namespace Crv
 
 		[[nodiscard]] const std::shared_ptr<Snd::Dx12::VertexBufferView>& getVertexBufferView() const;
 		[[nodiscard]] const std::shared_ptr<Snd::Dx12::Buffer>& getVertexBuffer() const;
-		[[nodiscard]] const void* getVertexBufferCpuData() const;
+		[[nodiscard]] const std::vector<uint8_t>& getVertexBufferCpuData() const;
 
 		[[nodiscard]] const std::shared_ptr<Snd::Dx12::IndexBufferView>& getIndexBufferView() const;
 		[[nodiscard]] const std::shared_ptr<Snd::Dx12::Buffer>& getIndexBuffer() const;
 		[[nodiscard]] const std::vector<uint32_t>& getIndexBufferCpuData() const;
 
 	private:
-		const void* m_vertexCpuData;
+		std::vector<uint8_t> m_vertexCpuData;
 		std::shared_ptr<Snd::Dx12::Buffer> m_vertexBuffer;
 		std::shared_ptr<Snd::Dx12::VertexBufferView> m_vertexBufferView;
 

@@ -25,7 +25,8 @@ namespace Crv
         void update(float dt);
         void render();
 
-        void changeModel(const StaticModelCreateInfo &modelInfo);
+        // for now only one model it will change the model registered if used more then once
+        void registerModel(const StaticModelCreateInfo &modelInfo);
 
         // returns instance id who has been created
         uint32_t addModelInstance(const DirectX::XMFLOAT4X4 &modelMatrix);

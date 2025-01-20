@@ -22,6 +22,7 @@
 
 #include "VxStaticModel.h"
 #include "PxStaticModel.h"
+#include "Crv/PrivateData/DataGenerators.h"
 
 namespace Crv
 {
@@ -38,7 +39,7 @@ namespace Crv
         void update(float dt);
         void render();
 
-        void changeModel(const StaticModelCreateInfo &modelInfo);
+        void registerModel(const StaticModelCreateInfo &modelInfo);
 
         // returns instance id who has been created
         uint32_t addModelInstance(const DirectX::XMFLOAT4X4 &modelMatrix);
@@ -68,7 +69,7 @@ namespace Crv
         };
 
     private:
-        static constexpr uint32_t s_cMaxInstanceCount = 1000;
+        static constexpr uint32_t s_cMaxInstanceCount = 10000;
 
         CameraCpuData m_constantBufferCpuData{};
 
@@ -167,7 +168,7 @@ namespace Crv
             std::vector rootParameters
             {
                 Snd::Dx12::RootParameter{Snd::Dx12::RootParameterType::Table, Snd::Dx12::ShaderVisibility::Vertex, inputTableParameterCbv},
-                Snd::Dx12::RootParameter{Snd::Dx12::RootParameterType::Table, Snd::Dx12::ShaderVisibility::Vertex, inputTableParameterSrv}
+                Snd::Dx12::RootParameter{Snd::Dx12::RootParameterType::Table, Snd::Dx12::ShaderVisibility::Vertex, inputTableParameterSrv},
             };
 
             Snd::Dx12::StaticSamplers samplers;
@@ -213,29 +214,34 @@ namespace Crv
 
     void StaticModelRenderer::Impl::updateCamera(const DirectX::XMFLOAT4X4& viewMatrix, const DirectX::XMFLOAT4X4& projectionMatrix)
     {
-        m_constantBufferCpuData.m_projectionMatrix = projectionMatrix;
         m_constantBufferCpuData.m_viewMatrix = viewMatrix;
+        m_constantBufferCpuData.m_projectionMatrix = projectionMatrix;
 
         m_cameraConstantBufferGpuData[m_context.getFrameIndex()]->map(0, 0,
             reinterpret_cast<void**>(&m_cameraConstantBufferCpuVisibleGpuPointers[m_context.getFrameIndex()]));
         memcpy(m_cameraConstantBufferCpuVisibleGpuPointers[m_context.getFrameIndex()], &m_constantBufferCpuData,
-               sizeof(m_constantBufferCpuData));
+               sizeof(CameraCpuData));
         m_cameraConstantBufferGpuData[m_context.getFrameIndex()]->unmap();
     }
 
     void StaticModelRenderer::Impl::update(float dt)
     {
+        if (m_instanceDatas.empty())
+        {
+            return;
+        }
+
         m_instancesBufferGpuData[m_context.getFrameIndex()]->map(0, 0,
             reinterpret_cast<void**>(&m_instancesBufferCpuVisibleGpuPointers[m_context.getFrameIndex()]));
         memcpy(m_instancesBufferCpuVisibleGpuPointers[m_context.getFrameIndex()], m_instanceDatas.data(),
                sizeof(ModelInstanceData) * m_instanceDatas.size());
-        m_cameraConstantBufferGpuData[m_context.getFrameIndex()]->unmap();
+        m_instancesBufferGpuData[m_context.getFrameIndex()]->unmap();
     }
 
     void StaticModelRenderer::Impl::render()
     {
         m_context.preRecording();
-        m_context.clearBackBufferColor();
+        m_context.clear();
 
         m_context.bindRootSignature(*m_rootSignature);
         m_context.bindPipelineState(*m_pipelineState);
@@ -244,9 +250,9 @@ namespace Crv
         m_context.setDescriptorHeaps(heaps);
 
         m_context.setGraphicsRootDescriptorTable(0, *m_descriptorHeap, m_context.getFrameIndex());
-        m_context.setGraphicsRootDescriptorTable(0, *m_descriptorHeap, m_context.getFrameIndex()+2);
+        m_context.setGraphicsRootDescriptorTable(1, *m_descriptorHeap, m_context.getFrameIndex()+2);
 
-        m_context.setTopologyTypeTriangleList(Snd::Dx12::PrimitiveTopology::TriangleList);
+        m_context.setTopology(Snd::Dx12::PrimitiveTopology::TriangleList);
 
         for(const auto& mesh : m_registeredStaticModel.m_staticModel.m_meshes)
         {
@@ -266,23 +272,34 @@ namespace Crv
         m_context.moveToNextFrame();
     }
 
-    void StaticModelRenderer::Impl::changeModel(const StaticModelCreateInfo &modelInfo)
+    void StaticModelRenderer::Impl::registerModel(const StaticModelCreateInfo &modelInfo)
     {
         m_registeredStaticModel.m_staticModel.m_meshes.clear();
         m_registeredStaticModel.m_staticModel.m_meshes.reserve(modelInfo.m_meshes.size());
 
         for (const auto& meshInfo : modelInfo.m_meshes)
         {
+            NOMAD_ASSERT(Nmd::AssertType::Expect, meshInfo.m_verticesInfo.m_vertexSize == 40, "Static model renderer only accepts meshes with format "
+                                                                                              "float4 position, float4 normal, float2 uv");
+
+
             m_registeredStaticModel.m_staticModel.m_meshes.emplace_back( m_context, meshInfo.m_name, meshInfo.m_verticesInfo );
             const StaticMesh& meshToUpload = m_registeredStaticModel.m_staticModel.m_meshes.back();
-            m_context.upload(meshToUpload.getVertexBuffer(), meshToUpload.getVertexBufferCpuData());
+
+            m_context.upload(meshToUpload.getVertexBuffer(), meshToUpload.getVertexBufferCpuData().data());
             m_context.upload(meshToUpload.getIndexBuffer(), meshToUpload.getIndexBufferCpuData().data());
         }
     }
 
     uint32_t StaticModelRenderer::Impl::addModelInstance(const DirectX::XMFLOAT4X4 &modelMatrix)
     {
+        if (m_instanceDatas.size() >= s_cMaxInstanceCount)
+        {
+            NOMAD_LOG(Nmd::LogLevel::Warning, "Instance count exceeded");
+            return -1;
+        }
         m_instanceDatas.emplace_back(modelMatrix);
+        m_registeredStaticModel.m_instanceCount++;
         return m_instanceDatas.size() - 1;
     }
 
@@ -328,6 +345,7 @@ namespace Crv
 
     void StaticModelRenderer::update(float dt)
     {
+        m_impl->update(dt);
     }
 
     // ReSharper disable once CppMemberFunctionMayBeConst
@@ -337,9 +355,9 @@ namespace Crv
     }
 
     // ReSharper disable once CppMemberFunctionMayBeConst
-    void StaticModelRenderer::changeModel(const StaticModelCreateInfo &modelInfo)
+    void StaticModelRenderer::registerModel(const StaticModelCreateInfo &modelInfo)
     {
-        m_impl->changeModel(modelInfo);
+        m_impl->registerModel(modelInfo);
     }
 
     // ReSharper disable once CppMemberFunctionMayBeConst

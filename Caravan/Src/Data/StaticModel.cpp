@@ -38,8 +38,8 @@ namespace Crv
                 Snd::Dx12::ResourceHeapType::Default,
                 Snd::Dx12::ResourceFlag::None,
                 Snd::Dx12::ResourceState::Common,
-                geometryInfo.m_vertexSize,
-                geometryInfo.m_vertexCount
+                sizeof(geometryInfo.m_indices[0]),
+                geometryInfo.m_indices.size()
             );
             m_indexBufferView = std::make_unique<Snd::Dx12::IndexBufferView>(m_indexBuffer);
             m_indexCpuData = geometryInfo.m_indices;
@@ -59,7 +59,7 @@ namespace Crv
         return m_vertexBuffer;
     }
 
-    const void* StaticMesh::getVertexBufferCpuData() const
+    const std::vector<uint8_t>& StaticMesh::getVertexBufferCpuData() const
     {
         return m_vertexCpuData;
     }

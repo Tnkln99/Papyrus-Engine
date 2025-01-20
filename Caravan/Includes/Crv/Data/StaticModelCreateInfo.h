@@ -7,9 +7,9 @@ namespace Crv
 {
     struct GeometryBufferCreateInfo
     {
-        const void* m_vertexBuffer;
+        std::vector<uint8_t> m_vertexBuffer; // Stores the vertex buffer data
         UINT m_vertexSize;
-        UINT m_vertexCount;
+        size_t m_vertexCount;
 
         std::vector<uint32_t> m_indices;
     };
