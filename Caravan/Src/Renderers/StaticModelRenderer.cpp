@@ -74,6 +74,7 @@ namespace Crv
         CameraCpuData m_constantBufferCpuData{};
 
         RegisteredStaticModel m_registeredStaticModel{};
+        // todo: change this to array with s_cMaxInstanceCount elements
         std::vector<ModelInstanceData> m_instanceDatas;
 
     private:
@@ -203,6 +204,8 @@ namespace Crv
 
             m_pipelineState = std::make_unique<Snd::Dx12::PipelineState>("StaticModel PipelineState", *m_context.getDevice(), graphicsPipelineDesc);
         }
+
+        m_instanceDatas.reserve(s_cMaxInstanceCount);
 
         m_context.init();
     }

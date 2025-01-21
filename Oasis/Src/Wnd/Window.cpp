@@ -1,6 +1,8 @@
 #include "Os/Pch.h"
 #include "Os/Wnd/Window.h"
 
+#include "Nmd/Logger.h"
+
 namespace Os::Wnd
 {
     bool Window::init(const std::string &title, int width, int height)
@@ -93,8 +95,19 @@ namespace Os::Wnd
                     if (pThis->m_messageCallback)
                     {
                         Message msg = { MessageType::KeyDown };
-                        msg.m_keyId = static_cast<uint8_t>(wParam);
-
+                        const auto key = translateKey(static_cast<UINT8>(wParam));
+                        msg.m_keyDownId = key;
+                        pThis->m_messageCallback(msg);
+                    }
+                    break;
+                }
+                case WM_KEYUP:
+                {
+                    if (pThis->m_messageCallback)
+                    {
+                        Message msg = { MessageType::KeyUp };
+                        const auto key = translateKey(static_cast<UINT8>(wParam));
+                        msg.m_keyUpId = key;
                         pThis->m_messageCallback(msg);
                     }
                     break;
@@ -114,6 +127,33 @@ namespace Os::Wnd
             }
         }
         return 0;
+    }
+
+    Key Window::translateKey(WPARAM wParam)
+    {
+        switch (wParam)
+        {
+            case 'W':
+                return Key::ClvW;
+            case 'A':
+                return Key::ClvA;
+            case 'S':
+                return Key::ClvS;
+            case 'D':
+                return Key::ClvD;
+            case VK_LEFT:
+                return Key::ArwLeft;
+            case VK_RIGHT:
+                return Key::ArwRight;
+            case VK_UP:
+                return Key::ArwUp;
+            case VK_DOWN:
+                return Key::ArwDown;
+            case VK_ESCAPE:
+                return Key::ClvEsc;
+            default:
+                return Key::Unknown;
+        }
     }
 }
 

@@ -1,3 +1,5 @@
+#include <chrono>
+
 #include "Os/WindowFactory.h"
 #include "Crv/Renderers/StaticModelRenderer.h"
 #include "Crv/Data/StaticModelCreateInfo.h"
@@ -7,6 +9,7 @@
 #include <windows.h>
 #include <iostream>
 
+#include "SimpleCamera.h"
 #include "Nmd/Asserter.h"
 
 
@@ -48,34 +51,40 @@ std::vector<Crv::StaticModelCreateInfo> importFileAsAScene(const std::string &fi
     return results;
 }
 
-void setCameraPosition(Crv::StaticModelRenderer& renderer, const int width, const int height)
+void setUpScene(Crv::StaticModelRenderer& renderer)
 {
-    // Camera at (0, 0, –10), looking toward (0, 0, 0) in LH coords
-    const DirectX::XMVECTOR eyePosition    = DirectX::XMVectorSet(0.0f, 0.0f, -10.0f, 1.0f);
-    const DirectX::XMVECTOR targetPosition = DirectX::XMVectorSet(0.0f, 0.0f,  0.0f, 1.0f);
-    const DirectX::XMVECTOR upDirection    = DirectX::XMVectorSet(0.0f, 1.0f,  0.0f, 0.0f);
+    constexpr float scale = 1.0f;
 
-    const DirectX::XMMATRIX viewMatrix = DirectX::XMMatrixLookAtLH(eyePosition, targetPosition, upDirection);
+    const XMMATRIX mat = XMMatrixTranslation(2, 0, 0);
+    const auto matT = XMMatrixTranspose(mat);
 
-    auto transposeViewMat = DirectX::XMMatrixTranspose(viewMatrix);
+    XMFLOAT4X4 modelMatrixOut{};
+    XMStoreFloat4x4(&modelMatrixOut, matT);
 
-    // 45° vertical FOV, 16:9, near=0.1f, far=1000.f
-    constexpr float fovAngleY = DirectX::XMConvertToRadians(45.0f);
-    const float aspect    = width / height;
-    constexpr float nearZ     = 0.1f;
-    constexpr float farZ      = 1000.0f;
+    auto id = renderer.addModelInstance(modelMatrixOut);
 
-    const DirectX::XMMATRIX projectionMatrix =
-        DirectX::XMMatrixPerspectiveFovLH(fovAngleY, aspect, nearZ, farZ);
+    const XMMATRIX mat2 = XMMatrixScaling(scale, scale, scale) * XMMatrixTranslation(-2, 0, 0);
+    const XMMATRIX matT2 = XMMatrixTranspose(mat2);
 
-    auto transposeProjMat = DirectX::XMMatrixTranspose(projectionMatrix);
+    XMFLOAT4X4 modelMatrixOut2{};
+    XMStoreFloat4x4(&modelMatrixOut2, matT2);
 
-    // Store these into your constant buffer (row‐major in typical D3D style)
-    DirectX::XMFLOAT4X4 viewOut, projOut;
+    auto id2 = renderer.addModelInstance(modelMatrixOut2);
+}
+
+void setCameraPosition(Crv::StaticModelRenderer& renderer, SimpleCamera& camera, const int width, const int height)
+{
+    const auto proj = camera.getProjectionMatrix(45, width/height, 0.1f, 1000.0f);
+    const auto transposeProjMat = XMMatrixTranspose(proj);
+
+    const auto view = camera.getViewMatrix();
+    const auto transposeViewMat = XMMatrixTranspose(view);
+
+
+    XMFLOAT4X4 viewOut{}, projOut{};
     XMStoreFloat4x4(&viewOut, transposeViewMat);
     XMStoreFloat4x4(&projOut, transposeProjMat);
 
-    // Now upload modelOut, viewOut, projOut to your CB
     renderer.updateCamera(viewOut, projOut);
 }
 
@@ -83,68 +92,67 @@ int main()
 {
     const auto window = Os::WindowFactory::createWindow(Os::OsType::Windows);
 
-    int height = 600;
-    int width = 800;
-    if (!window->init("Papyrus", width, height))
+    int windowHeight = 600;
+    int windowWidth = 800;
+    if (!window->init("Papyrus", windowWidth, windowHeight))
     {
         return 1;
     }
 
-    const auto& staticModels = importFileAsAScene("Cube.fbx");
+    const auto& staticModels = importFileAsAScene("Suzanne.fbx");
 
     auto windowHandler = static_cast<HWND>(window->getHandler());
     auto renderer = std::make_unique<Crv::StaticModelRenderer>(windowHandler, 800, 600);
     renderer->registerModel(staticModels[0]);
     renderer->init();
 
-    constexpr float scale = 1.0f;
+    setUpScene(*renderer);
 
-    const DirectX::XMMATRIX mat = DirectX::XMMatrixTranslation(2, 0, 0);
-    const auto matT = XMMatrixTranspose(mat);
-
-    DirectX::XMFLOAT4X4 modelMatrixOut;
-    XMStoreFloat4x4(&modelMatrixOut, matT);
-
-    auto id = renderer->addModelInstance(modelMatrixOut);
-
-    const DirectX::XMMATRIX mat2 = DirectX::XMMatrixScaling(scale, scale, scale) * DirectX::XMMatrixTranslation(-2, 0, 0);
-    const DirectX::XMMATRIX matT2 = XMMatrixTranspose(mat2);
-
-    DirectX::XMFLOAT4X4 modelMatrixOut2;
-    XMStoreFloat4x4(&modelMatrixOut2, matT2);
-
-    auto id2 = renderer->addModelInstance(modelMatrixOut2);
-
-    window->show();
+    SimpleCamera camera{};
+    camera.init({0,0,-10});
+    //camera.setMoveSpeed(1.0f);
 
     // Window callbacks
-    window->setMessageCallback([&renderer, &width, &height](const Os::Message& message) {
+    window->setMessageCallback([&renderer, &windowWidth, &windowHeight, &camera](const Os::Message& message) {
         switch (message.m_type)
         {
             case Os::MessageType::Paint:
                 break;
             case Os::MessageType::Resize:
-                height = message.m_resize.m_height;
-                width = message.m_resize.m_width;
+                windowHeight = message.m_resize.m_height;
+                windowWidth = message.m_resize.m_width;
                 renderer->onResizeWindow(message.m_resize.m_width, message.m_resize.m_height);
                 break;
             case Os::MessageType::Close:
                 NOMAD_LOG(Nmd::LogLevel::Info, "Closing...");
                 break;
             case Os::MessageType::KeyDown:
-                NOMAD_LOG(Nmd::LogLevel::Info, "{}", message.m_keyId);
+                camera.onKeyDown(message.m_keyDownId);
+                break;
+            case Os::MessageType::KeyUp:
+                camera.onKeyUp(message.m_keyUpId);
                 break;
             default:
                 break;
         }
     });
 
+    window->show();
+
+    auto lastTime = std::chrono::high_resolution_clock::now();
     while (!window->shouldClose())
     {
+        // Calculate elapsed time (dt)
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<float> elapsed = currentTime - lastTime;
+        float dt = elapsed.count(); // dt in seconds
+        lastTime = currentTime;     // Update lastTime for the next frame
+
         window->processMessage();
 
-        renderer->update(1); // todo: calculate dt
-        setCameraPosition(*renderer, width, height);
+        camera.update(dt);
+        renderer->update(dt); // todo: calculate dt
+        setCameraPosition(*renderer, camera, windowWidth, windowHeight);
         renderer->render();
     }
 

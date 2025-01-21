@@ -1,15 +1,6 @@
-//*********************************************************
-//
-// Copyright (c) Microsoft. All rights reserved.
-// This code is licensed under the MIT License (MIT).
-// THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF
-// ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING ANY
-// IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
-// PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.
-//
-//*********************************************************
-
 #pragma once
+
+#include "Os/Key.h"
 
 #include "DirectXMath.h"
 #include <windows.h>
@@ -23,13 +14,13 @@ public:
 
     void init(XMFLOAT3 position);
     void update(float elapsedSeconds);
-    XMMATRIX getViewMatrix();
+    XMMATRIX getViewMatrix() const;
     XMMATRIX getProjectionMatrix(float fov, float aspectRatio, float nearPlane = 1.0f, float farPlane = 1000.0f);
     void setMoveSpeed(float unitsPerSecond);
     void setTurnSpeed(float radiansPerSecond);
 
-    void onKeyDown(WPARAM key);
-    void onKeyUp(WPARAM key);
+    void onKeyDown(Os::Key key);
+    void onKeyUp(Os::Key key);
 
 private:
     void reset();

@@ -20,6 +20,8 @@ namespace Os::Wnd
     private:
         static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
+        static Key translateKey(WPARAM wParam);
+
     private:
         HWND m_hwnd;
         MSG m_msg;

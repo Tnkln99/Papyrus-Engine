@@ -3,6 +3,8 @@
 #include <string>
 #include <functional>
 
+#include "Key.h"
+
 namespace Os
 {
     enum class MessageType
@@ -10,6 +12,7 @@ namespace Os
         Paint,
         Resize,
         KeyDown,
+        KeyUp,
         Close
     };
 
@@ -24,7 +27,8 @@ namespace Os
                 int m_height;
             } m_resize;
 
-            uint8_t m_keyId;
+            Key m_keyDownId;
+            Key m_keyUpId;
         };
     };
 
