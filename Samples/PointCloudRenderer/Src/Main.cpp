@@ -12,11 +12,13 @@
 #include "SimpleCamera.h"
 
 
-void importFileAsPointCloud(Crv::PointCloudRenderer& renderer, const std::string &filePath)
+void importFileAsPointCloud(Crv::PointCloudRenderer& renderer, const std::string &directoryName, const std::string &fileName)
 {
-    const Mrc::Importer importer(filePath);
+    const Mrc::Importer importer(directoryName, fileName);
 
-    for (const Mrc::AScene& scene = importer.getScene(); const Mrc::AStaticModel& model : scene.m_models)
+    Mrc::AScene scene;
+    importer.getScene(scene);
+    for (const Mrc::AStaticModel& model : scene.m_models)
     {
         for (const Mrc::AStaticMesh & mesh : model.m_meshes)
         {
@@ -26,7 +28,7 @@ void importFileAsPointCloud(Crv::PointCloudRenderer& renderer, const std::string
 
             for (const auto& vertex : mesh.m_vertices)
             {
-                DirectX::XMFLOAT4 pos = vertex.m_position;
+                const DirectX::XMFLOAT3 pos = vertex.m_position;
                 renderer.addPoint(XMFLOAT3(pos.x, pos.y, pos.z));
             }
         }
@@ -93,7 +95,7 @@ int main()
     auto renderer = std::make_unique<Crv::PointCloudRenderer>(windowHandler, 800, 600);
     renderer->init();
 
-    importFileAsPointCloud(*renderer, "Cube.fbx");
+    importFileAsPointCloud(*renderer, "", "Suzanne.fbx");
 
     SimpleCamera camera{};
     camera.init({0,0,-10});

@@ -2,13 +2,14 @@
 
 #include <DirectXMath.h>
 #include <vector>
+#include <string>
 
 namespace Mrc
 {
     struct AVertex
     {
-        DirectX::XMFLOAT4 m_position;
-        DirectX::XMFLOAT4 m_normal;
+        DirectX::XMFLOAT3 m_position;
+        DirectX::XMFLOAT3 m_normal;
         DirectX::XMFLOAT2 m_uv;
     };
 

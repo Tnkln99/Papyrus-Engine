@@ -1,28 +1,23 @@
 #pragma once
 
+#include "Mrc/Data/Assets.h"
 #include <string>
-
-#include "Data/Assets.h"
-
-struct aiMesh;
-struct aiNode;
-struct aiScene;
+#include <memory>
 
 namespace Mrc
 {
+    class IImporter;
+
     class Importer
     {
     public:
-        explicit Importer(std::string filePath);
-        [[nodiscard]] const AScene& getScene() const;
+        explicit Importer(const std::string &fileDirectory, const std::string& fileName);
+        ~Importer();
 
+        // import process happens here
+        void getScene(AScene& outScene) const;
     private:
-        void import();
-        void processScene(const aiScene* scene);
-        AStaticModel processModel(const aiNode* node, const aiScene* scene);
-        AStaticMesh processMesh(const aiMesh* mesh, const aiScene* scene);
-
+        std::unique_ptr<IImporter> m_importer;
         std::string m_filePath;
-        AScene m_scene;
     };
 }

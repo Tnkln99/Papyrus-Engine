@@ -1,0 +1,26 @@
+namespace Mrc;
+
+table Vertex
+{
+    position: [float];
+    normal: [float];
+    uv: [float];
+}
+
+table StaticMesh
+{
+    vertices: [Vertex]; // List of vertices
+    indices: [uint32];  // List of indices
+}
+
+table StaticModel
+{
+    meshes: [StaticMesh]; // List of meshes
+}
+
+table Scene
+{
+    models: [StaticModel]; // List of models in the scene
+}
+
+root_type Scene;

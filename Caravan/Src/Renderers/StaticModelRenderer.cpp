@@ -187,9 +187,9 @@ namespace Crv
         {
             const std::vector inputAssemblyParameters
             {
-                Snd::InputParameter{ "POSITION", Snd::InputParameterType::Vector4, 0, 0, Snd::InputRate::PerVertex },
-                Snd::InputParameter{ "NORMAL", Snd::InputParameterType::Vector4, 16, 0, Snd::InputRate::PerVertex },
-                Snd::InputParameter{ "TEXCOORD", Snd::InputParameterType::Vector2, 32, 0, Snd::InputRate::PerVertex },
+                Snd::InputParameter{ "POSITION", Snd::InputParameterType::Vector3, 0, 0, Snd::InputRate::PerVertex },
+                Snd::InputParameter{ "NORMAL", Snd::InputParameterType::Vector3, 12, 0, Snd::InputRate::PerVertex },
+                Snd::InputParameter{ "TEXCOORD", Snd::InputParameterType::Vector2, 24, 0, Snd::InputRate::PerVertex },
             };
 
             constexpr Snd::ShaderCode vertexCode{ VxStaticModel, sizeof(VxStaticModel) };
@@ -283,7 +283,7 @@ namespace Crv
 
         for (const auto& meshInfo : modelInfo.m_meshes)
         {
-            NOMAD_ASSERT(Nmd::AssertType::Expect, meshInfo.m_verticesInfo.m_vertexSize == 40, "Static model renderer only accepts meshes with format "
+            NOMAD_ASSERT(Nmd::AssertType::Expect, meshInfo.m_verticesInfo.m_vertexSize == 32, "Static model renderer only accepts meshes with format "
                                                                                               "float4 position, float4 normal, float2 uv");
 
 

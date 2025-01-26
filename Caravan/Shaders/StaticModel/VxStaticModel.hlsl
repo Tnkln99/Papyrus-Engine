@@ -15,7 +15,7 @@ struct InstanceData
 StructuredBuffer<InstanceData> instanceDataBuffer : register(t0);
 
 
-PSInput main(float4 position : POSITION, float4 normal : NORMAL, float2 uv : TEXCOORD, uint instanceID : SV_InstanceID)
+PSInput main(float3 position : POSITION, float3 normal : NORMAL, float2 uv : TEXCOORD, uint instanceID : SV_InstanceID)
 {
    	PSInput result;
 
@@ -23,7 +23,7 @@ PSInput main(float4 position : POSITION, float4 normal : NORMAL, float2 uv : TEX
     float4x4 modelMatrix = instanceDataBuffer[instanceID].modelMatrix;
 
 	// World space
-    float4 worldPos = mul(position, modelMatrix);
+    float4 worldPos = mul(float4(position,1), modelMatrix);
     // Camera (view) space
     float4 viewPos  = mul(worldPos, view);
     // Clip space
@@ -33,7 +33,7 @@ PSInput main(float4 position : POSITION, float4 normal : NORMAL, float2 uv : TEX
 
 	// Transform normal (using the 3x3 part of the modelMatrix)
     // If non-uniform scaling is present, use inverse-transpose of modelMatrix’s 3x3 for correct lighting.
-    float3 worldNormal = mul(modelMatrix, normal);
+    float3 worldNormal = mul(modelMatrix, float4(normal,1));
     // Pass it as float4 but only the xyz is relevant for shading
     result.normal = float4(worldNormal, 0.0f);
 

@@ -1,5 +1,6 @@
 #include <chrono>
 
+#include "Nmd/Asserter.h"
 #include "Os/WindowFactory.h"
 #include "Crv/Renderers/StaticModelRenderer.h"
 #include "Crv/Data/StaticModelCreateInfo.h"
@@ -10,16 +11,18 @@
 #include <iostream>
 
 #include "SimpleCamera.h"
-#include "Nmd/Asserter.h"
+#include "Mrc/Exporter.h"
 
 
-std::vector<Crv::StaticModelCreateInfo> importFileAsAScene(const std::string &filePath)
+std::vector<Crv::StaticModelCreateInfo> importFileAsAScene(const std::string &directoryName, const std::string &fileName)
 {
     std::vector<Crv::StaticModelCreateInfo> results;
 
-    const Mrc::Importer importer(filePath);
+    const Mrc::Importer importer(directoryName,fileName);
+    Mrc::AScene scene;
+    importer.getScene(scene);
 
-    for (const Mrc::AScene& scene = importer.getScene(); const Mrc::AStaticModel& model : scene.m_models)
+    for (const Mrc::AStaticModel& model : scene.m_models)
     {
         Crv::StaticModelCreateInfo modelCreateInfo;
         modelCreateInfo.m_name = model.m_name;
@@ -99,7 +102,7 @@ int main()
         return 1;
     }
 
-    const auto& staticModels = importFileAsAScene("StanfordBunny.fbx");
+    const auto& staticModels = importFileAsAScene("", "Suzanne.fbx");
 
     auto windowHandler = static_cast<HWND>(window->getHandler());
     auto renderer = std::make_unique<Crv::StaticModelRenderer>(windowHandler, 800, 600);
