@@ -1,4 +1,4 @@
-#include "Crv/Renderers/StaticModelRenderer.h"
+#include "Crv/Renderers/PointCloudRenderer.h"
 
 #include "Crv/PrivateData/StaticModel.h"
 #include "Crv/Data/StaticModelCreateInfo.h"
@@ -20,14 +20,14 @@
 #include <unordered_map>
 #include <ranges>
 
-#include "StaticModel/VxStaticModel.h"
-#include "StaticModel/PxStaticModel.h"
+#include "PointRenderer/VxPointRenderer.h"
+#include "PointRenderer/PxPointRenderer.h"
 
 #include "Crv/PrivateData/DataGenerators.h"
 
 namespace Crv
 {
-    class StaticModelRenderer::Impl
+    class PointCloudRenderer::Impl
     {
     public:
         Impl(const HWND& hwnd, uint32_t displayWidth, uint32_t displayHeight);
@@ -40,18 +40,17 @@ namespace Crv
         void update(float dt);
         void render();
 
-        void registerModel(const StaticModelCreateInfo &modelInfo);
-
         // returns instance id who has been created
-        uint32_t addModelInstance(const DirectX::XMFLOAT4X4 &modelMatrix);
-        void removeModelInstance(uint32_t instanceId);
+        uint32_t addPoint(const DirectX::XMFLOAT3 &position);
+        void removePoint(uint32_t instanceId);
 
-        void setTransformStaticModelInstance(uint32_t instanceId, const DirectX::XMFLOAT4X4 &modelMatrix);
+        void changePointLocation(uint32_t instanceId, const DirectX::XMFLOAT3 &position);
 
     private:
-        struct ModelInstanceData
+        struct alignas(16) PointData
         {
-            DirectX::XMFLOAT4X4 m_transforms;
+            DirectX::XMFLOAT3 m_position;
+            float m_radius;
         };
 
         struct CameraCpuData
@@ -70,13 +69,12 @@ namespace Crv
         };
 
     private:
-        static constexpr uint32_t s_cMaxInstanceCount = 10000;
+        static constexpr uint32_t s_cMaxPointCount = 10000000;
 
         CameraCpuData m_constantBufferCpuData{};
 
-        RegisteredStaticModel m_registeredStaticModel{};
         // todo: change this to array with s_cMaxInstanceCount elements
-        std::vector<ModelInstanceData> m_instanceDatas;
+        std::vector<PointData> m_pointDatas;
 
     private:
         const HWND& m_hwnd;
@@ -93,23 +91,23 @@ namespace Crv
         std::vector<std::shared_ptr<Snd::Dx12::Buffer>> m_cameraConstantBufferGpuData{}; // multiple for multiple buffering
         std::vector<UINT8*> m_cameraConstantBufferCpuVisibleGpuPointers; // multiple for multiple buffering
 
-        std::vector<std::shared_ptr<Snd::Dx12::Buffer>> m_instancesBufferGpuData{}; // multiple for multiple buffering
-        std::vector<UINT8*> m_instancesBufferCpuVisibleGpuPointers; // multiple for multiple buffering
+        std::vector<std::shared_ptr<Snd::Dx12::Buffer>> m_pointInstancesBufferGpuData{}; // multiple for multiple buffering
+        std::vector<UINT8*> m_pointInstancesBufferCpuVisibleGpuPointers; // multiple for multiple buffering
     };
 
-    StaticModelRenderer::StaticModelRenderer(const HWND& hwnd, uint32_t displayWidth, uint32_t displayHeight)
+    PointCloudRenderer::PointCloudRenderer(const HWND& hwnd, uint32_t displayWidth, uint32_t displayHeight)
     : m_impl(std::make_unique<Impl>(hwnd, displayWidth, displayHeight)) {}
 
-    StaticModelRenderer::Impl::Impl(const HWND& hwnd, const uint32_t displayWidth, const uint32_t displayHeight)
+    PointCloudRenderer::Impl::Impl(const HWND& hwnd, const uint32_t displayWidth, const uint32_t displayHeight)
     : m_hwnd(hwnd), m_displayWidth(displayWidth), m_displayHeight(displayHeight), m_context(m_hwnd, m_displayWidth, m_displayHeight) {}
-    StaticModelRenderer::Impl::~Impl() = default;
+    PointCloudRenderer::Impl::~Impl() = default;
 
-    void StaticModelRenderer::Impl::init()
+    void PointCloudRenderer::Impl::init()
     {
         // resource creation
         {
             m_descriptorHeap = std::make_unique<Snd::Dx12::DescriptorHeap>(
-               "StaticModelRenderer Input Descriptor",
+               "PointCloudRenderer Input Descriptor",
                   *m_context.getDevice(),
                   Snd::Dx12::DescriptorHeapType::CbvSrvUav,
                   Snd::Dx12::Context::getFrameCount() * 2, // multiple constant buffers for multiple buffering
@@ -118,8 +116,8 @@ namespace Crv
 
             m_cameraConstantBufferCpuVisibleGpuPointers.resize(Snd::Dx12::Context::getFrameCount());
             m_cameraConstantBufferGpuData.resize(Snd::Dx12::Context::getFrameCount());
-            m_instancesBufferGpuData.resize(Snd::Dx12::Context::getFrameCount());
-            m_instancesBufferCpuVisibleGpuPointers.resize(Snd::Dx12::Context::getFrameCount());
+            m_pointInstancesBufferGpuData.resize(Snd::Dx12::Context::getFrameCount());
+            m_pointInstancesBufferCpuVisibleGpuPointers.resize(Snd::Dx12::Context::getFrameCount());
 
             for (int i = 0; i < Snd::Dx12::Context::getFrameCount(); ++i)
             {
@@ -142,15 +140,15 @@ namespace Crv
 
                 // creation of instances data
                 {
-                    m_instancesBufferGpuData[i] = std::make_shared<Snd::Dx12::Buffer>(
+                    m_pointInstancesBufferGpuData[i] = std::make_shared<Snd::Dx12::Buffer>(
                                     "InstancesData Buffer",
                                     *m_context.getDevice(),
                                     Snd::Dx12::ResourceHeapType::Upload,
                                     Snd::Dx12::ResourceFlag::None,
                                     Snd::Dx12::ResourceState::Common,
-                                    sizeof(ModelInstanceData), s_cMaxInstanceCount);
+                                    sizeof(PointData), s_cMaxPointCount);
 
-                    m_descriptorHeap->newShaderResourceView( *m_context.getDevice(), *m_instancesBufferGpuData[i], i + Snd::Dx12::Context::getFrameCount());
+                    m_descriptorHeap->newShaderResourceView( *m_context.getDevice(), *m_pointInstancesBufferGpuData[i], i + Snd::Dx12::Context::getFrameCount());
                 }
             }
         }
@@ -185,15 +183,10 @@ namespace Crv
 
         // pipeline definition
         {
-            const std::vector inputAssemblyParameters
-            {
-                Snd::InputParameter{ "POSITION", Snd::InputParameterType::Vector4, 0, 0, Snd::InputRate::PerVertex },
-                Snd::InputParameter{ "NORMAL", Snd::InputParameterType::Vector4, 16, 0, Snd::InputRate::PerVertex },
-                Snd::InputParameter{ "TEXCOORD", Snd::InputParameterType::Vector2, 32, 0, Snd::InputRate::PerVertex },
-            };
+            const std::vector<Snd::InputParameter> inputAssemblyParameters{};
 
-            constexpr Snd::ShaderCode vertexCode{ VxStaticModel, sizeof(VxStaticModel) };
-            constexpr Snd::ShaderCode pixelCode{ PxStaticModel, sizeof(PxStaticModel) };
+            constexpr Snd::ShaderCode vertexCode{ VxPointRenderer, sizeof(VxPointRenderer) };
+            constexpr Snd::ShaderCode pixelCode{ PxPointRenderer, sizeof(PxPointRenderer) };
 
             Snd::Dx12::ClassicGraphicsPipelineDescriptor graphicsPipelineDesc
             {
@@ -206,17 +199,17 @@ namespace Crv
             m_pipelineState = std::make_unique<Snd::Dx12::PipelineState>("StaticModel PipelineState", *m_context.getDevice(), graphicsPipelineDesc);
         }
 
-        m_instanceDatas.reserve(s_cMaxInstanceCount);
+        m_pointDatas.reserve(s_cMaxPointCount);
 
         m_context.init();
     }
 
-    void StaticModelRenderer::Impl::onResizeWindow(const uint32_t width, const uint32_t height) const
+    void PointCloudRenderer::Impl::onResizeWindow(const uint32_t width, const uint32_t height) const
     {
         m_context.onResizeWindow(width, height);
     }
 
-    void StaticModelRenderer::Impl::updateCamera(const DirectX::XMFLOAT4X4& viewMatrix, const DirectX::XMFLOAT4X4& projectionMatrix)
+    void PointCloudRenderer::Impl::updateCamera(const DirectX::XMFLOAT4X4& viewMatrix, const DirectX::XMFLOAT4X4& projectionMatrix)
     {
         m_constantBufferCpuData.m_viewMatrix = viewMatrix;
         m_constantBufferCpuData.m_projectionMatrix = projectionMatrix;
@@ -228,21 +221,21 @@ namespace Crv
         m_cameraConstantBufferGpuData[m_context.getFrameIndex()]->unmap();
     }
 
-    void StaticModelRenderer::Impl::update(float dt)
+    void PointCloudRenderer::Impl::update(float dt)
     {
-        if (m_instanceDatas.empty())
+        if (m_pointDatas.empty())
         {
             return;
         }
 
-        m_instancesBufferGpuData[m_context.getFrameIndex()]->map(0, 0,
-            reinterpret_cast<void**>(&m_instancesBufferCpuVisibleGpuPointers[m_context.getFrameIndex()]));
-        memcpy(m_instancesBufferCpuVisibleGpuPointers[m_context.getFrameIndex()], m_instanceDatas.data(),
-               sizeof(ModelInstanceData) * m_instanceDatas.size());
-        m_instancesBufferGpuData[m_context.getFrameIndex()]->unmap();
+        m_pointInstancesBufferGpuData[m_context.getFrameIndex()]->map(0, 0,
+            reinterpret_cast<void**>(&m_pointInstancesBufferCpuVisibleGpuPointers[m_context.getFrameIndex()]));
+        memcpy(m_pointInstancesBufferCpuVisibleGpuPointers[m_context.getFrameIndex()], m_pointDatas.data(),
+               sizeof(PointData) * m_pointDatas.size());
+        m_pointInstancesBufferGpuData[m_context.getFrameIndex()]->unmap();
     }
 
-    void StaticModelRenderer::Impl::render()
+    void PointCloudRenderer::Impl::render()
     {
         m_context.preRecording();
         m_context.clear();
@@ -258,128 +251,94 @@ namespace Crv
 
         m_context.setTopology(Snd::Dx12::PrimitiveTopology::TriangleList);
 
-        for(const auto& mesh : m_registeredStaticModel.m_staticModel.m_meshes)
-        {
-            m_context.bindVertexBufferView(*mesh.getVertexBufferView());
-            m_context.bindIndexBufferView(*mesh.getIndexBufferView());
-
-            m_context.drawIndexedInstanced(
-                mesh.getIndexBufferCpuData().size(),
-                m_registeredStaticModel.m_instanceCount,
-                0,
+        m_context.drawInstanced(
+                6,
+                m_pointDatas.size(),
                 0,
                 0);
-        }
 
         m_context.postRecording();
         m_context.flush();
         m_context.moveToNextFrame();
     }
 
-    void StaticModelRenderer::Impl::registerModel(const StaticModelCreateInfo &modelInfo)
+    uint32_t PointCloudRenderer::Impl::addPoint(const DirectX::XMFLOAT3 &position)
     {
-        m_registeredStaticModel.m_staticModel.m_meshes.clear();
-        m_registeredStaticModel.m_staticModel.m_meshes.reserve(modelInfo.m_meshes.size());
-
-        for (const auto& meshInfo : modelInfo.m_meshes)
-        {
-            NOMAD_ASSERT(Nmd::AssertType::Expect, meshInfo.m_verticesInfo.m_vertexSize == 40, "Static model renderer only accepts meshes with format "
-                                                                                              "float4 position, float4 normal, float2 uv");
-
-
-            m_registeredStaticModel.m_staticModel.m_meshes.emplace_back( m_context, meshInfo.m_name, meshInfo.m_verticesInfo );
-            const StaticMesh& meshToUpload = m_registeredStaticModel.m_staticModel.m_meshes.back();
-
-            m_context.upload(meshToUpload.getVertexBuffer(), meshToUpload.getVertexBufferCpuData().data());
-            m_context.upload(meshToUpload.getIndexBuffer(), meshToUpload.getIndexBufferCpuData().data());
-        }
-    }
-
-    uint32_t StaticModelRenderer::Impl::addModelInstance(const DirectX::XMFLOAT4X4 &modelMatrix)
-    {
-        if (m_instanceDatas.size() >= s_cMaxInstanceCount)
+        if (m_pointDatas.size() >= s_cMaxPointCount)
         {
             NOMAD_LOG(Nmd::LogLevel::Warning, "Instance count exceeded");
             return -1;
         }
-        m_instanceDatas.emplace_back(modelMatrix);
-        m_registeredStaticModel.m_instanceCount++;
-        return m_instanceDatas.size() - 1;
+        m_pointDatas.emplace_back(position, 0.1f);
+        return m_pointDatas.size() - 1;
     }
 
-    void StaticModelRenderer::Impl::removeModelInstance(const uint32_t instanceId)
+    void PointCloudRenderer::Impl::removePoint(const uint32_t instanceId)
     {
-        if (m_instanceDatas.size() <= instanceId)
+        if (m_pointDatas.size() <= instanceId)
         {
             NOMAD_LOG(Nmd::LogLevel::Warning, "Trying to remove a instance that cant exists");
             return;
         }
-        auto& it = m_instanceDatas.at(instanceId);
+        auto& it = m_pointDatas.at(instanceId);
 
-        std::swap(it, m_instanceDatas.back());
-        m_instanceDatas.pop_back();
+        std::swap(it, m_pointDatas.back());
+        m_pointDatas.pop_back();
     }
 
-    void StaticModelRenderer::Impl::setTransformStaticModelInstance(const uint32_t instanceId,
-                                                                    const DirectX::XMFLOAT4X4 &modelMatrix)
+    void PointCloudRenderer::Impl::changePointLocation(const uint32_t instanceId, const DirectX::XMFLOAT3 &position)
     {
-        ModelInstanceData &instanceData = m_instanceDatas[instanceId];
-        instanceData.m_transforms = modelMatrix;
+        PointData &instanceData = m_pointDatas[instanceId];
+        instanceData.m_position = position;
     }
 
 
-    StaticModelRenderer::~StaticModelRenderer() = default;
+    PointCloudRenderer::~PointCloudRenderer() = default;
 
     // ReSharper disable once CppMemberFunctionMayBeConst
-    void StaticModelRenderer::init()
+    void PointCloudRenderer::init()
     {
         m_impl->init();
     }
 
-    void StaticModelRenderer::onResizeWindow(const uint32_t width, const uint32_t height) const
+    void PointCloudRenderer::onResizeWindow(const uint32_t width, const uint32_t height) const
     {
         m_impl->onResizeWindow(width, height);
     }
 
     // ReSharper disable once CppMemberFunctionMayBeConst
-    void StaticModelRenderer::updateCamera(const DirectX::XMFLOAT4X4 &viewMatrix, const DirectX::XMFLOAT4X4 &projectionMatrix)
+    void PointCloudRenderer::updateCamera(const DirectX::XMFLOAT4X4 &viewMatrix, const DirectX::XMFLOAT4X4 &projectionMatrix)
     {
         m_impl->updateCamera(viewMatrix, projectionMatrix);
     }
 
-    void StaticModelRenderer::update(float dt)
+    void PointCloudRenderer::update(float dt)
     {
         m_impl->update(dt);
     }
 
     // ReSharper disable once CppMemberFunctionMayBeConst
-    void StaticModelRenderer::render()
+    void PointCloudRenderer::render()
     {
         m_impl->render();
     }
 
     // ReSharper disable once CppMemberFunctionMayBeConst
-    void StaticModelRenderer::registerModel(const StaticModelCreateInfo &modelInfo)
+    uint32_t PointCloudRenderer::addPoint(const DirectX::XMFLOAT3 &position)
     {
-        m_impl->registerModel(modelInfo);
+        return m_impl->addPoint(position);
     }
 
     // ReSharper disable once CppMemberFunctionMayBeConst
-    uint32_t StaticModelRenderer::addModelInstance(const DirectX::XMFLOAT4X4 &modelMatrix)
+    void PointCloudRenderer::removePoint(const uint32_t instanceId)
     {
-        return m_impl->addModelInstance(modelMatrix);
+        return m_impl->removePoint(instanceId);
     }
 
     // ReSharper disable once CppMemberFunctionMayBeConst
-    void StaticModelRenderer::removeModelInstance(const uint32_t instanceId)
+    void PointCloudRenderer::changePointLocation(const uint32_t instanceId,
+        const DirectX::XMFLOAT3 &position)
     {
-        return m_impl->removeModelInstance(instanceId);
-    }
-
-    // ReSharper disable once CppMemberFunctionMayBeConst
-    void StaticModelRenderer::setTransformStaticModelInstance(const uint32_t instanceId,
-        const DirectX::XMFLOAT4X4 &modelMatrix)
-    {
-        return m_impl->setTransformStaticModelInstance(instanceId, modelMatrix);
+        return m_impl->changePointLocation(instanceId, position);
     }
 }

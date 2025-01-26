@@ -19,8 +19,8 @@
 #include "Snd/Dx12/StaticSamplers.h"
 #include "Snd/Dx12/Utils/Common.h"
 
-#include "PxHelloTriangle.h"
-#include "VxHelloTriangle.h"
+#include "HelloTriangle/PxHelloTriangle.h"
+#include "HelloTriangle/VxHelloTriangle.h"
 
 namespace Crv
 {

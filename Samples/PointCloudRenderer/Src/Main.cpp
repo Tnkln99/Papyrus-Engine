@@ -1,78 +1,67 @@
 #include <chrono>
 
 #include "Os/WindowFactory.h"
-#include "Crv/Renderers/StaticModelRenderer.h"
-#include "Crv/Data/StaticModelCreateInfo.h"
+#include "Crv/Renderers/PointCloudRenderer.h"
 #include "Nmd/Logger.h"
 #include "Mrc/Importer.h"
+#include "Mrc/Data/Assets.h"
 
 #include <windows.h>
 #include <iostream>
 
 #include "SimpleCamera.h"
-#include "Nmd/Asserter.h"
 
 
-std::vector<Crv::StaticModelCreateInfo> importFileAsAScene(const std::string &filePath)
+void importFileAsPointCloud(Crv::PointCloudRenderer& renderer, const std::string &filePath)
 {
-    std::vector<Crv::StaticModelCreateInfo> results;
-
     const Mrc::Importer importer(filePath);
 
     for (const Mrc::AScene& scene = importer.getScene(); const Mrc::AStaticModel& model : scene.m_models)
     {
-        Crv::StaticModelCreateInfo modelCreateInfo;
-        modelCreateInfo.m_name = model.m_name;
         for (const Mrc::AStaticMesh & mesh : model.m_meshes)
         {
             std::vector<uint8_t> vertexBuffer;
             vertexBuffer.resize(mesh.m_vertices.size() * sizeof(Mrc::AVertex));
             std::memcpy(vertexBuffer.data(), mesh.m_vertices.data(), vertexBuffer.size());
 
-            Crv::GeometryBufferCreateInfo bufferCreateInfo;
-
-            bufferCreateInfo.m_indices = mesh.m_indices;
-            bufferCreateInfo.m_vertexBuffer = vertexBuffer;
-            bufferCreateInfo.m_vertexCount = mesh.m_vertices.size();
-            bufferCreateInfo.m_vertexSize = sizeof(Mrc::AVertex);
-
-            Crv::StaticMeshCreateInfo meshCreateInfo;
-
-            meshCreateInfo.m_name = mesh.m_name;
-            meshCreateInfo.m_verticesInfo = bufferCreateInfo;
-
-            modelCreateInfo.m_meshes.push_back(meshCreateInfo);
+            for (const auto& vertex : mesh.m_vertices)
+            {
+                DirectX::XMFLOAT4 pos = vertex.m_position;
+                renderer.addPoint(XMFLOAT3(pos.x, pos.y, pos.z));
+            }
         }
-        results.push_back(modelCreateInfo);
     }
-
-    NOMAD_ASSERT(Nmd::AssertType::Expect, !results.empty(), "Invalid import path!");
-
-    return results;
 }
 
-void setUpScene(Crv::StaticModelRenderer& renderer)
+void createSpherePointCloud(Crv::PointCloudRenderer& renderer)
 {
-    constexpr float scale = 1.0f;
+    constexpr int verticalDivisions = 1000; // Number of vertical slices (latitude)
+    // ReSharper disable once CppTooWideScope
+    constexpr int horizontalDivisions = 1000;
 
-    const XMMATRIX mat = XMMatrixTranslation(2, 0, 0);
-    const auto matT = XMMatrixTranspose(mat);
+    for (int i = 0; i <= verticalDivisions; ++i)
+    {
+        // Latitude angle (phi) from -PI/2 to PI/2
+        const float phi = XM_PI * (static_cast<float>(i) / verticalDivisions - 0.5f);
 
-    XMFLOAT4X4 modelMatrixOut{};
-    XMStoreFloat4x4(&modelMatrixOut, matT);
+        for (int j = 0; j < horizontalDivisions; ++j)
+        {
+            constexpr float radius = 10.0f;
+            // Longitude angle (theta) from 0 to 2PI
+            const float theta = XM_2PI * static_cast<float>(j) / horizontalDivisions;
 
-    auto id = renderer.addModelInstance(modelMatrixOut);
+            // Convert spherical coordinates to Cartesian coordinates
+            const float x = radius * cos(phi) * cos(theta);
+            const float y = radius * cos(phi) * sin(theta);
+            const float z = radius * sin(phi);
 
-    const XMMATRIX mat2 = XMMatrixScaling(scale, scale, scale) * XMMatrixTranslation(-2, 0, 0);
-    const XMMATRIX matT2 = XMMatrixTranspose(mat2);
-
-    XMFLOAT4X4 modelMatrixOut2{};
-    XMStoreFloat4x4(&modelMatrixOut2, matT2);
-
-    auto id2 = renderer.addModelInstance(modelMatrixOut2);
+            // Add the point to the renderer
+            renderer.addPoint(XMFLOAT3(x, y, z));
+        }
+    }
 }
 
-void setCameraPosition(Crv::StaticModelRenderer& renderer, SimpleCamera& camera, const int width, const int height)
+void setCameraPosition(Crv::PointCloudRenderer& renderer, SimpleCamera& camera, const int width, const int height)
 {
     const auto proj = camera.getProjectionMatrix(45, width/height, 0.1f, 1000.0f);
     const auto transposeProjMat = XMMatrixTranspose(proj);
@@ -99,23 +88,23 @@ int main()
         return 1;
     }
 
-    const auto& staticModels = importFileAsAScene("StanfordBunny.fbx");
 
     auto windowHandler = static_cast<HWND>(window->getHandler());
-    auto renderer = std::make_unique<Crv::StaticModelRenderer>(windowHandler, 800, 600);
-    renderer->registerModel(staticModels[0]);
+    auto renderer = std::make_unique<Crv::PointCloudRenderer>(windowHandler, 800, 600);
     renderer->init();
 
-    setUpScene(*renderer);
+    importFileAsPointCloud(*renderer, "Cube.fbx");
 
     SimpleCamera camera{};
-    camera.init({0,0,-5});
-    camera.setMoveSpeed(10.0f);
+    camera.init({0,0,-10});
+    camera.setMoveSpeed(5.0f);
 
     // Window callbacks
     window->setMessageCallback([&renderer, &windowWidth, &windowHeight, &camera](const Os::Message& message) {
         switch (message.m_type)
         {
+            case Os::MessageType::Paint:
+                break;
             case Os::MessageType::Resize:
                 windowHeight = message.m_resize.m_height;
                 windowWidth = message.m_resize.m_width;
@@ -143,7 +132,7 @@ int main()
         // Calculate elapsed time (dt)
         auto currentTime = std::chrono::high_resolution_clock::now();
         std::chrono::duration<float> elapsed = currentTime - lastTime;
-        float dt = elapsed.count(); // dt in seconds
+        const float dt = elapsed.count(); // dt in seconds
         lastTime = currentTime;     // Update lastTime for the next frame
 
         window->processMessage();

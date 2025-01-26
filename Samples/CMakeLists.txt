@@ -6,3 +6,5 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_subdirectory(HelloTriangle)
 add_subdirectory(ModelViewer)
+add_subdirectory(HelloArduino)
+add_subdirectory(PointCloudRenderer)
