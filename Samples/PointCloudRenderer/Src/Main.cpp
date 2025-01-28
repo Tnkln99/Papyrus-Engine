@@ -1,36 +1,42 @@
-#include <chrono>
+#include "SimpleCamera.h"
+
+#include "Nmd/Logger.h"
 
 #include "Os/WindowFactory.h"
 #include "Crv/Renderers/PointCloudRenderer.h"
-#include "Nmd/Logger.h"
+
 #include "Mrc/Importer.h"
-#include "Mrc/Data/Assets.h"
+#include "Mrc/Data/AStaticModel.h"
+#include "Mrc/Exporter.h"
+
 
 #include <windows.h>
 #include <iostream>
-
-#include "SimpleCamera.h"
+#include <chrono>
 
 
 void importFileAsPointCloud(Crv::PointCloudRenderer& renderer, const std::string &directoryName, const std::string &fileName)
 {
-    const Mrc::Importer importer(directoryName, fileName);
+    const Mrc::Importer modelImporter(directoryName, fileName);
+    Mrc::AStaticModel model;
+    modelImporter.getStaticModel(model);
 
-    Mrc::AScene scene;
-    importer.getScene(scene);
-    for (const Mrc::AStaticModel& model : scene.m_models)
+    Mrc::Exporter::exportStaticModel(model, "", "Maymun");
+
+    const Mrc::Importer asmImporter("", "Maymun.asm");
+    Mrc::AStaticModel model2;
+    asmImporter.getStaticModel(model2);
+
+    for (const Mrc::AStaticMesh & mesh : model2.m_meshes)
     {
-        for (const Mrc::AStaticMesh & mesh : model.m_meshes)
-        {
-            std::vector<uint8_t> vertexBuffer;
-            vertexBuffer.resize(mesh.m_vertices.size() * sizeof(Mrc::AVertex));
-            std::memcpy(vertexBuffer.data(), mesh.m_vertices.data(), vertexBuffer.size());
+        std::vector<uint8_t> vertexBuffer;
+        vertexBuffer.resize(mesh.m_vertices.size() * sizeof(Mrc::AVertex));
+        std::memcpy(vertexBuffer.data(), mesh.m_vertices.data(), vertexBuffer.size());
 
-            for (const auto& vertex : mesh.m_vertices)
-            {
-                const DirectX::XMFLOAT3 pos = vertex.m_position;
-                renderer.addPoint(XMFLOAT3(pos.x, pos.y, pos.z));
-            }
+        for (const auto& vertex : mesh.m_vertices)
+        {
+            const DirectX::XMFLOAT3 pos = vertex.m_position;
+            renderer.addPoint(XMFLOAT3(pos.x, pos.y, pos.z));
         }
     }
 }

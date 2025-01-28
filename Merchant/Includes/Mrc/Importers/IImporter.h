@@ -1,5 +1,5 @@
 #pragma once
-#include "Mrc/Data/Assets.h"
+#include "Mrc/Data/AStaticModel.h"
 
 namespace Mrc
 {
@@ -7,6 +7,6 @@ namespace Mrc
     {
     public:
         virtual ~IImporter() = default;
-        virtual void import(std::string const &filePath, AScene& outScene) = 0;
+        virtual void import(std::string const &filePath, AStaticModel& outModel) = 0;
     };
 }

@@ -1,8 +1,8 @@
 #pragma once
 
 #undef max // Undefine Windows' max macro
-#include "Mrc/Generated/AScene_generated.h"
-#include "Mrc/Data/Assets.h"
+#include "Mrc/Generated/AStaticModel_generated.h"
+#include "Mrc/Data/AStaticModel.h"
 #include <string>
 
 namespace Mrc
@@ -10,7 +10,7 @@ namespace Mrc
     class Exporter
     {
     public:
-        static void exportScene(const AScene& scene, const std::string& fileDirectory, std::string fileName);
+        static void exportStaticModel(const AStaticModel& staticModel, const std::string& fileDirectory, const std::string &fileName);
 
     private:
         static flatbuffers::Offset<Mrc::StaticModel> convertModel(flatbuffers::FlatBufferBuilder& builder, const AStaticModel& model);

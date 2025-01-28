@@ -25,10 +25,4 @@ namespace Mrc
         std::string m_name;
         std::vector<AStaticMesh> m_meshes;
     };
-
-    struct AScene
-    {
-        std::string m_name;
-        std::vector<AStaticModel> m_models;
-    };
 }

@@ -2,7 +2,7 @@
 
 #include <filesystem>
 
-#include "Mrc/Importers/ASceneImporter.h"
+#include "Mrc/Importers/AStaticModelImporter.h"
 #include "Mrc/Importers/AssimpImporter.h"
 
 
@@ -29,9 +29,9 @@ namespace Mrc
 
         m_filePath = pathDir.string();
 
-        if (extension == "ascene")
+        if (extension == "asm")
         {
-            m_importer = std::make_unique<ASceneImporter>();
+            m_importer = std::make_unique<AStaticModelImporter>();
         }
         else
         {
@@ -41,8 +41,8 @@ namespace Mrc
 
     Importer::~Importer() = default;
 
-    void Importer::getScene(AScene& outScene) const
+    void Importer::getStaticModel(AStaticModel& outModel) const
     {
-        m_importer->import(m_filePath, outScene);
+        m_importer->import(m_filePath, outModel);
     }
 }

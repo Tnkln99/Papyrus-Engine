@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Mrc/Data/Assets.h"
+#include "Mrc/Data/AStaticModel.h"
 #include <string>
 #include <memory>
 
@@ -15,7 +15,7 @@ namespace Mrc
         ~Importer();
 
         // import process happens here
-        void getScene(AScene& outScene) const;
+        void getStaticModel(AStaticModel& outModel) const;
     private:
         std::unique_ptr<IImporter> m_importer;
         std::string m_filePath;

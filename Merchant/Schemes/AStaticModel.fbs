@@ -18,9 +18,4 @@ table StaticModel
     meshes: [StaticMesh]; // List of meshes
 }
 
-table Scene
-{
-    models: [StaticModel]; // List of models in the scene
-}
-
-root_type Scene;
+root_type StaticModel;

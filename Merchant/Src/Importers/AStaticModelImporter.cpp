@@ -1,18 +1,19 @@
-#include "Mrc/Importers/ASceneImporter.h"
+#include "Mrc/Importers/AStaticModelImporter.h"
+
+#include "Nmd/Asserter.h"
 
 #include <fstream>
 #include <ios>
 
-#include "Nmd/Asserter.h"
 
 namespace Mrc
 {
-    void ASceneImporter::import(const std::string &filePath, AScene& outScene)
+    void AStaticModelImporter::import(const std::string &filePath, AStaticModel& outScene)
     {
-        return importScene(filePath, outScene);
+        return importStaticModel(filePath, outScene);
     }
 
-    void ASceneImporter::importScene(const std::string &filePath, AScene& outScene)
+    void AStaticModelImporter::importStaticModel(const std::string &filePath, AStaticModel& outScene)
     {
         std::ifstream inFile(filePath, std::ios::binary);
         if (!inFile)
@@ -21,22 +22,12 @@ namespace Mrc
         }
 
         const std::vector<uint8_t> buffer(std::istreambuf_iterator<char>(inFile), {});
-        const auto* flatScene = Mrc::GetScene(buffer.data());
+        const auto* flatModel = Mrc::GetStaticModel(buffer.data());
 
-        return processScene(flatScene, outScene);
+        return processModel(flatModel, outScene);
     }
 
-    void ASceneImporter::processScene(const Mrc::Scene *flatScene, AScene& outScene)
-    {
-        for (const auto* flatModel : *flatScene->models())
-        {
-            AStaticModel model;
-            processModel(flatModel, model);
-            outScene.m_models.push_back(model);
-        }
-    }
-
-    void ASceneImporter::processModel(const Mrc::StaticModel* flatModel, AStaticModel& outModel)
+    void AStaticModelImporter::processModel(const Mrc::StaticModel* flatModel, AStaticModel& outModel)
     {
         for (const auto* flatMesh : *flatModel->meshes())
         {
@@ -46,7 +37,7 @@ namespace Mrc
         }
     }
 
-    void ASceneImporter::processMesh(const Mrc::StaticMesh* flatMesh, AStaticMesh& outMesh)
+    void AStaticModelImporter::processMesh(const Mrc::StaticMesh* flatMesh, AStaticMesh& outMesh)
     {
         for (const auto* flatVertex : *flatMesh->vertices())
         {

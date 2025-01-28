@@ -19,35 +19,32 @@ std::vector<Crv::StaticModelCreateInfo> importFileAsAScene(const std::string &di
     std::vector<Crv::StaticModelCreateInfo> results;
 
     const Mrc::Importer importer(directoryName,fileName);
-    Mrc::AScene scene;
-    importer.getScene(scene);
+    Mrc::AStaticModel model;
+    importer.getStaticModel(model);
 
-    for (const Mrc::AStaticModel& model : scene.m_models)
+    Crv::StaticModelCreateInfo modelCreateInfo;
+    modelCreateInfo.m_name = model.m_name;
+    for (const Mrc::AStaticMesh & mesh : model.m_meshes)
     {
-        Crv::StaticModelCreateInfo modelCreateInfo;
-        modelCreateInfo.m_name = model.m_name;
-        for (const Mrc::AStaticMesh & mesh : model.m_meshes)
-        {
-            std::vector<uint8_t> vertexBuffer;
-            vertexBuffer.resize(mesh.m_vertices.size() * sizeof(Mrc::AVertex));
-            std::memcpy(vertexBuffer.data(), mesh.m_vertices.data(), vertexBuffer.size());
+        std::vector<uint8_t> vertexBuffer;
+        vertexBuffer.resize(mesh.m_vertices.size() * sizeof(Mrc::AVertex));
+        std::memcpy(vertexBuffer.data(), mesh.m_vertices.data(), vertexBuffer.size());
 
-            Crv::GeometryBufferCreateInfo bufferCreateInfo;
+        Crv::GeometryBufferCreateInfo bufferCreateInfo;
 
-            bufferCreateInfo.m_indices = mesh.m_indices;
-            bufferCreateInfo.m_vertexBuffer = vertexBuffer;
-            bufferCreateInfo.m_vertexCount = mesh.m_vertices.size();
-            bufferCreateInfo.m_vertexSize = sizeof(Mrc::AVertex);
+        bufferCreateInfo.m_indices = mesh.m_indices;
+        bufferCreateInfo.m_vertexBuffer = vertexBuffer;
+        bufferCreateInfo.m_vertexCount = mesh.m_vertices.size();
+        bufferCreateInfo.m_vertexSize = sizeof(Mrc::AVertex);
 
-            Crv::StaticMeshCreateInfo meshCreateInfo;
+        Crv::StaticMeshCreateInfo meshCreateInfo;
 
-            meshCreateInfo.m_name = mesh.m_name;
-            meshCreateInfo.m_verticesInfo = bufferCreateInfo;
+        meshCreateInfo.m_name = mesh.m_name;
+        meshCreateInfo.m_verticesInfo = bufferCreateInfo;
 
-            modelCreateInfo.m_meshes.push_back(meshCreateInfo);
-        }
-        results.push_back(modelCreateInfo);
+        modelCreateInfo.m_meshes.push_back(meshCreateInfo);
     }
+    results.push_back(modelCreateInfo);
 
     NOMAD_ASSERT(Nmd::AssertType::Expect, !results.empty(), "Invalid import path!");
 

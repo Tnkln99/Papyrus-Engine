@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Mrc/Importers/IImporter.h"
-#include "Mrc/Data/Assets.h"
+#include "Mrc/Data/AStaticModel.h"
 
 #include <string>
 
@@ -14,13 +14,14 @@ namespace Mrc
     class AssimpImporter final : public IImporter
     {
     public:
-        void import(const std::string &filePath, AScene &outScene) override;
+        void import(const std::string &filePath, AStaticModel &outModel) override;
 
     private:
-        void processScene(const aiScene* scene, AScene &outScene);
-        AStaticModel processModel(const aiNode* node, const aiScene* scene);
-        AStaticMesh processMesh(const aiMesh* mesh, const aiScene* scene);
+        void processScene(const aiScene* scene, AStaticModel &outModel);
 
-        void applySizeConstraint(AStaticModel &model);
+        aiNode *findFirstNodeWithMesh(aiNode *node);
+
+        void processModel(const aiNode* node, const aiScene* scene, AStaticModel& outModel);
+        void processMesh(const aiMesh* mesh, AStaticMesh& outMesh);
     };
 }
