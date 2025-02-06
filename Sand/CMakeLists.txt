@@ -17,7 +17,7 @@ target_sources(Sand PRIVATE ${SOURCES})
 target_include_directories(Sand PUBLIC Includes)
 
 # ------------------------------------  add libaries  -------------------------------------------------
-target_link_libraries(Sand PRIVATE Nomad)
+target_link_libraries(Sand PRIVATE Nomad Imgui)
 
 # Link DirectX 12 libraries
 target_link_libraries(Sand PRIVATE

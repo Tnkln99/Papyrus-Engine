@@ -62,38 +62,13 @@ add_custom_target(GenerateShaderHeaders DEPENDS ${GENERATED_HEADERS})
 add_dependencies(Caravan GenerateShaderHeaders)
 
 
-# Precompiled headers setup for Caravan
-if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    # GCC compiler setup for precompiled headers
-    set(PCH_HEADER "Includes/Crv/Pch.h")
-    set(PCH_OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/Pch.h.gch")
+target_precompile_headers(Caravan PUBLIC "Includes/Crv/Pch.h")
 
-    # Compile the precompiled header
-    add_custom_command(
-            OUTPUT "${PCH_OUTPUT}"
-            COMMAND "${CMAKE_CXX_COMPILER}" -x c++-header ${CMAKE_CXX_FLAGS} -o "${PCH_OUTPUT}" "${PCH_HEADER}"
-            DEPENDS "${PCH_HEADER}"
-    )
-
-    # Ensure the precompiled header is built before the executable
-    add_custom_target(Pch DEPENDS "${PCH_OUTPUT}")
-    add_dependencies(Caravan Pch)
-
-    # Include the precompiled header in compilation
-    target_compile_options(Caravan PUBLIC -include "${PCH_HEADER}")
-else()
-    # Use CMake's target_precompile_headers for other compilers
-    target_precompile_headers(Caravan PUBLIC "Includes/Crv/Pch.h")
-endif()
-
-# Platform-specific settings
-if(WIN32)
-    # Link DirectX 12 libraries if needed by Caravan
-    target_link_libraries(Caravan PRIVATE
-            d3d12.lib
-            dxgi.lib
-            dxguid.lib
-    )
-endif()
+target_link_libraries(Caravan PRIVATE
+        d3d12.lib
+        dxgi.lib
+        dxguid.lib
+        Imgui
+)
 
 add_subdirectory(Tests)

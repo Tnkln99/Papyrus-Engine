@@ -11,7 +11,7 @@ namespace Mrc
         flatbuffers::FlatBufferBuilder builder;
 
         // Convert models to FlatBuffer format
-        const auto flatModel = convertModel(builder, staticModel); // <-- Correctly store the returned offset
+        const auto flatModel = convertModel(builder, staticModel);
 
         // Finish building the FlatBuffer
         builder.Finish(flatModel);

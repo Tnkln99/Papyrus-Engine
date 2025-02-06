@@ -17,3 +17,4 @@ add_subdirectory(Caravan)
 add_subdirectory(Oasis)
 
 add_subdirectory(Samples)
+add_subdirectory(Tools)

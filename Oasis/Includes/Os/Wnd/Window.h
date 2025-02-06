@@ -4,8 +4,11 @@
 #include <windows.h>
 #include <string>
 
+
+
 namespace Os::Wnd
 {
+
     class Window final : public IWindow
     {
     public:

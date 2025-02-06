@@ -17,13 +17,15 @@
 
 #include "Nmd/Logger.h"
 
-#include <unordered_map>
-#include <ranges>
-
 #include "StaticModel/VxStaticModel.h"
 #include "StaticModel/PxStaticModel.h"
 
 #include "Crv/PrivateData/DataGenerators.h"
+
+
+#include <imgui.h>
+#include <unordered_map>
+#include <ranges>
 
 namespace Crv
 {
@@ -102,7 +104,10 @@ namespace Crv
 
     StaticModelRenderer::Impl::Impl(const HWND& hwnd, const uint32_t displayWidth, const uint32_t displayHeight)
     : m_hwnd(hwnd), m_displayWidth(displayWidth), m_displayHeight(displayHeight), m_context(m_hwnd, m_displayWidth, m_displayHeight) {}
-    StaticModelRenderer::Impl::~Impl() = default;
+    StaticModelRenderer::Impl::~Impl()
+    {
+        m_context.cleanUpImgui();
+    };
 
     void StaticModelRenderer::Impl::init()
     {
@@ -208,6 +213,8 @@ namespace Crv
 
         m_instanceDatas.reserve(s_cMaxInstanceCount);
 
+        m_context.initImgui(m_hwnd);
+
         m_context.init();
     }
 
@@ -244,8 +251,12 @@ namespace Crv
 
     void StaticModelRenderer::Impl::render()
     {
+        m_context.newFrameImgui();
+
         m_context.preRecording();
         m_context.clear();
+
+        ImGui::ShowDemoWindow();
 
         m_context.bindRootSignature(*m_rootSignature);
         m_context.bindPipelineState(*m_pipelineState);
@@ -270,6 +281,8 @@ namespace Crv
                 0,
                 0);
         }
+
+        m_context.renderImgui();
 
         m_context.postRecording();
         m_context.flush();

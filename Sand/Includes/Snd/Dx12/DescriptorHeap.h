@@ -29,6 +29,8 @@ namespace Snd::Dx12
 			bool bShaderVisible = false);
 
 		[[nodiscard]] Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> getDxDescriptorHeap() const;
+		[[nodiscard]] UINT getIncrementSize() const {return m_handleIncrementSize;}
+
 
 		[[nodiscard]] DescriptorCpuHandle hCpu(UINT index) const;
 		[[nodiscard]] DescriptorGpuHandle hGpu(UINT index) const;
@@ -39,7 +41,6 @@ namespace Snd::Dx12
 
 		void newShaderResourceView(const Device& device, const Texture2D& texture, UINT index) const;
 		void newDepthStencilView(const Device& device, const Texture2D& texture, UINT index) const;
-
 	private:
 		D3D12_DESCRIPTOR_HEAP_DESC m_desc{};
 		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_descHeap;

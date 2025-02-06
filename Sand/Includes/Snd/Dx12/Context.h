@@ -1,5 +1,6 @@
 #pragma once
 
+#include <deque>
 #include <memory>
 #include <vector>
 
@@ -27,6 +28,7 @@ namespace Snd::Dx12
 	struct Viewport;
 	struct ScissorRect;
 
+
 	class Context
 	{
 	public:
@@ -40,6 +42,14 @@ namespace Snd::Dx12
 		void onResizeWindow(UINT width, UINT height) const;
 
 		void preRecording();
+
+#pragma region Imgui communications
+		// if renderer that uses Sans API wants to use Imgui, imgui should be initiated
+		void initImgui(const HWND &hWnd);
+		void newFrameImgui() const;
+		void renderImgui() const;
+		void cleanUpImgui() const;
+#pragma endregion
 
 #pragma region commammand list communications
 		void upload(const std::shared_ptr<Buffer>& bufferToUpload, const void* data) const;
@@ -70,6 +80,7 @@ namespace Snd::Dx12
 		                ResourceBarrierType type = ResourceBarrierType::Transition) const;
 #pragma endregion
 
+		// clears back buffer
 		void clear() const;
 		void postRecording() const;
 
@@ -82,7 +93,7 @@ namespace Snd::Dx12
 		static UINT getFrameCount();
 
 	private:
-		bool m_isOnRenderLoop = false;
+		bool m_bOnRenderLoop = false;
 
 		std::shared_ptr<Device> m_device;
 
@@ -95,6 +106,12 @@ namespace Snd::Dx12
 		std::shared_ptr<CommandQueue> m_graphicsCommandQueue;
 
 		std::unique_ptr<UploadContext> m_uploadContext;
+#pragma region Imgui memebers
+		bool m_bImguiInitiated= false;
+		static std::unique_ptr<DescriptorHeap> s_imguiSrvDescriptorHeap;
+		static constexpr UINT s_cImguiDescriptorCount = 32;
+		static std::deque<UINT> s_imguiSrvDescriptorFreeIndices;
+#pragma endregion
 	};
 }
 

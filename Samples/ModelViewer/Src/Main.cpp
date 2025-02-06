@@ -146,12 +146,12 @@ int main()
         float dt = elapsed.count(); // dt in seconds
         lastTime = currentTime;     // Update lastTime for the next frame
 
-        window->processMessage();
-
         camera.update(dt);
         renderer->update(dt); // todo: calculate dt
         setCameraPosition(*renderer, camera, windowWidth, windowHeight);
         renderer->render();
+
+        window->processMessage();
     }
 
     return 0;

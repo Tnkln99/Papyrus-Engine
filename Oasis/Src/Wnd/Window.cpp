@@ -3,6 +3,12 @@
 
 #include "Nmd/Logger.h"
 
+#include "imgui.h"
+#include <backends/imgui_impl_win32.h>
+
+
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 namespace Os::Wnd
 {
     bool Window::init(const std::string &title, int width, int height)
@@ -46,8 +52,15 @@ namespace Os::Wnd
         return m_hwnd;
     }
 
+    // Forward declare message handler from imgui_impl_win32.cpp
+
     LRESULT Window::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
+        if (ImGui_ImplWin32_WndProcHandler(hwnd, uMsg, wParam, lParam))
+        {
+            return true;
+        }
+
         Window* pThis = nullptr;
 
         if (uMsg == WM_NCCREATE)
