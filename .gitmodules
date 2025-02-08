@@ -10,3 +10,6 @@
 [submodule "Merchant/Externals/flatbuffers"]
 	path = Merchant/Externals/flatbuffers
 	url = https://github.com/google/flatbuffers.git
+[submodule "Merchant/Externals/DirectXMesh"]
+	path = Merchant/Externals/DirectXMesh
+	url = https://github.com/microsoft/DirectXMesh.git
