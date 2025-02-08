@@ -37,6 +37,8 @@ namespace Nmd
         static bool isPathInside(const std::string& parentPath, const std::string& childPath);
 
         static bool moveFile(const std::string &sourcePath, const std::string &destinationPath);
+
+        static std::string constructFilePathWithExtension(const std::string& dirName, const std::string& fileName, const std::string& extension);
     };
 }
 

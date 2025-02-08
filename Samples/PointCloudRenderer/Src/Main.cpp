@@ -21,7 +21,7 @@ void importFileAsPointCloud(Crv::PointCloudRenderer& renderer, const std::string
     Mrc::AStaticModel model;
     modelImporter.getStaticModel(model);
 
-    Mrc::Exporter::exportStaticModel(model, "", "Maymun");
+    Mrc::Exporter::exportAsStaticModel(model, "", "Maymun");
 
     const Mrc::Importer asmImporter("Maymun.asm");
     Mrc::AStaticModel model2;

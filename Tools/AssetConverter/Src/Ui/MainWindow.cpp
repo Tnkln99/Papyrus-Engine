@@ -52,7 +52,7 @@ namespace Ui
 
                         std::string outputName = Nmd::FileHelper::getFileName(file);
 
-                        Mrc::Exporter::exportStaticModel(model, "Output", outputName);
+                        Mrc::Exporter::exportAsStaticModel(model, "Output", outputName);
 
                         m_outputBrowser.refresh();
                     }

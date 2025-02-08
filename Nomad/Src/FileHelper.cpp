@@ -313,6 +313,14 @@ namespace Nmd
             }
         }
     }
+
+    std::string FileHelper::constructFilePathWithExtension(const std::string& dirName, const std::string& fileName, const std::string& extension)
+    {
+        std::filesystem::path pathDir(dirName);
+        pathDir /= fileName;
+        pathDir.replace_extension(extension);
+        return pathDir.string();
+    }
 }
 
 

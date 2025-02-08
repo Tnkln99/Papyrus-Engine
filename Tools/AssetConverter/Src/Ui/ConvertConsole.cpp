@@ -20,7 +20,7 @@ namespace Ui
                 {
                     m_selectedOption = ConvertOption::StaticModel;
                 }
-                if (ImGui::RadioButton("Meshlet Model", m_selectedOption == ConvertOption::MeshletModel))
+                if (ImGui::RadioButton("Clustered Static Model", m_selectedOption == ConvertOption::MeshletModel))
                 {
                     m_selectedOption = ConvertOption::MeshletModel;
                 }
