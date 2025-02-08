@@ -19,12 +19,15 @@ namespace Os::Wnd
         bool shouldClose() override;
         void processMessage() override;
 
+        void resizeWindow(int width, int height) override;
+        void setWindowResizable(bool enable) override;
+
+
         void * getHandler() override;
     private:
         static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
         static Key translateKey(WPARAM wParam);
-
     private:
         HWND m_hwnd;
         MSG m_msg;

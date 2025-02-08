@@ -10,7 +10,8 @@ namespace Mrc
     class Exporter
     {
     public:
-        static void exportStaticModel(const AStaticModel& staticModel, const std::string& fileDirectory, const std::string &fileName);
+        Exporter() = delete;
+        static void exportStaticModel(const AStaticModel& staticModel, const std::string& exportDirectory, const std::string& name);
 
     private:
         static flatbuffers::Offset<Mrc::StaticModel> convertModel(flatbuffers::FlatBufferBuilder& builder, const AStaticModel& model);

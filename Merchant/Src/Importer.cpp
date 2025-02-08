@@ -9,14 +9,11 @@
 
 namespace Mrc
 {
-    Importer::Importer(const std::string &fileDirectory, const std::string& fileName)
+    Importer::Importer(const std::string &filPath)
     {
-        const std::string extension = Nmd::FileHelper::getFileExtension(fileName);
+        const std::string extension = Nmd::FileHelper::getFileExtension(filPath);
 
-        std::filesystem::path pathDir(fileDirectory);
-        pathDir /= fileName;
-
-        m_filePath = pathDir.string();
+        m_filePath = filPath;
 
         if (extension == "asm")
         {

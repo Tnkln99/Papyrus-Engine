@@ -1,9 +1,9 @@
 #pragma once
 
-#include "ConvertOptions.h"
-#include "InputBrowser.h"
+#include "ConvertConsole.h"
+#include "FileExplorer.h"
+#include "SimpleBrowser.h"
 #include "Logger.h"
-#include "OutputBrowser.h"
 
 namespace Ui
 {
@@ -23,9 +23,13 @@ namespace Ui
         MainWindow(MainWindow&&) = delete;
         MainWindow& operator=(MainWindow&&) = delete;
     private:
-        InputBrowser m_assetBrowser;
-        OutputBrowser m_outputBrowser;
-        ConvertOptions m_convertOptions;
+        bool m_bOpenFileExplorer = false;
+
+        FileExplorer m_fileExplorer;
+
+        SimpleBrowser m_inputBrowser;
+        SimpleBrowser m_outputBrowser;
+        ConvertConsole m_convertConsole;
         Logger m_logger;
     };
 }

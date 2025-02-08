@@ -11,7 +11,7 @@ namespace Mrc
     class Importer
     {
     public:
-        explicit Importer(const std::string &fileDirectory, const std::string& fileName);
+        explicit Importer(const std::string &filePath);
         ~Importer();
 
         // import process happens here

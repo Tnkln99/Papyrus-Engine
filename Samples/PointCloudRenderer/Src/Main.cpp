@@ -15,15 +15,15 @@
 #include <chrono>
 
 
-void importFileAsPointCloud(Crv::PointCloudRenderer& renderer, const std::string &directoryName, const std::string &fileName)
+void importFileAsPointCloud(Crv::PointCloudRenderer& renderer, const std::string &filaPath)
 {
-    const Mrc::Importer modelImporter(directoryName, fileName);
+    const Mrc::Importer modelImporter(filaPath);
     Mrc::AStaticModel model;
     modelImporter.getStaticModel(model);
 
     Mrc::Exporter::exportStaticModel(model, "", "Maymun");
 
-    const Mrc::Importer asmImporter("", "Maymun.asm");
+    const Mrc::Importer asmImporter("Maymun.asm");
     Mrc::AStaticModel model2;
     asmImporter.getStaticModel(model2);
 
@@ -101,7 +101,7 @@ int main()
     auto renderer = std::make_unique<Crv::PointCloudRenderer>(windowHandler, 800, 600);
     renderer->init();
 
-    importFileAsPointCloud(*renderer, "", "Suzanne.fbx");
+    importFileAsPointCloud(*renderer, "Suzanne.fbx");
 
     SimpleCamera camera{};
     camera.init({0,0,-10});

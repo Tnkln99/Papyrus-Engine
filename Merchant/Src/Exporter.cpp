@@ -6,7 +6,7 @@
 
 namespace Mrc
 {
-    void Exporter::exportStaticModel(const AStaticModel& staticModel, const std::string& fileDirectory, const std::string &fileName)
+    void Exporter::exportStaticModel(const AStaticModel& staticModel, const std::string& exportDirectory, const std::string& name)
     {
         flatbuffers::FlatBufferBuilder builder;
 
@@ -17,8 +17,8 @@ namespace Mrc
         builder.Finish(flatModel);
 
         // Construct file path
-        std::filesystem::path pathDir(fileDirectory);
-        pathDir /= fileName;
+        std::filesystem::path pathDir(exportDirectory);
+        pathDir /= name;
         pathDir.replace_extension(".asm"); // Adjust extension as needed
 
         // Write out FlatBuffer data to file

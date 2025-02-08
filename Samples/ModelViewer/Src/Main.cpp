@@ -14,11 +14,11 @@
 #include "Mrc/Exporter.h"
 
 
-std::vector<Crv::StaticModelCreateInfo> importFileAsAScene(const std::string &directoryName, const std::string &fileName)
+std::vector<Crv::StaticModelCreateInfo> importFileAsAScene(const std::string &filaPath)
 {
     std::vector<Crv::StaticModelCreateInfo> results;
 
-    const Mrc::Importer importer(directoryName,fileName);
+    const Mrc::Importer importer(filaPath);
     Mrc::AStaticModel model;
     importer.getStaticModel(model);
 
@@ -99,7 +99,7 @@ int main()
         return 1;
     }
 
-    const auto& staticModels = importFileAsAScene("", "Suzanne.fbx");
+    const auto& staticModels = importFileAsAScene("Suzanne.fbx");
 
     auto windowHandler = static_cast<HWND>(window->getHandler());
     auto renderer = std::make_unique<Crv::StaticModelRenderer>(windowHandler, 800, 600);

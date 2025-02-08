@@ -46,6 +46,10 @@ namespace Os
         virtual bool shouldClose() = 0;
         virtual void processMessage() = 0;
 
+        virtual void resizeWindow(int width, int height) = 0;
+
+        virtual void setWindowResizable(bool enable) = 0;
+
         virtual void* getHandler() = 0;
 
         void setMessageCallback(const MessageCallback &callback) { m_messageCallback = callback; }

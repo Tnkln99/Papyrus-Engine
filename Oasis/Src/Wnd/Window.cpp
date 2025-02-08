@@ -21,12 +21,31 @@ namespace Os::Wnd
 
         RegisterClass(&wc);
 
-        m_hwnd = CreateWindowEx(
-            0, wc.lpszClassName, title.c_str(), WS_OVERLAPPEDWINDOW,
-            CW_USEDEFAULT, CW_USEDEFAULT, width, height, nullptr, nullptr, GetModuleHandle(nullptr), this);
+        RECT rc = { 0, 0, width, height };
 
+        // Adjust the window rectangle so that the client area is exactly width x height.
+        AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
+
+        // Compute the adjusted window size
+        LONG adjustedWidth  = rc.right - rc.left;
+        LONG adjustedHeight = rc.bottom - rc.top;
+
+        // Now create the window using the adjusted dimensions
+        m_hwnd = CreateWindowEx(
+            0,
+            wc.lpszClassName,
+            title.c_str(),
+            WS_OVERLAPPEDWINDOW,
+            CW_USEDEFAULT, CW_USEDEFAULT,
+            adjustedWidth,
+            adjustedHeight,
+            nullptr,
+            nullptr,
+            GetModuleHandle(nullptr),
+            this);
         m_width = width;
         m_height = height;
+
 
         return (m_hwnd ? true : false);
     }
@@ -45,6 +64,33 @@ namespace Os::Wnd
     {
         TranslateMessage(&m_msg);
         DispatchMessage(&m_msg);
+    }
+
+    void Window::resizeWindow(int width, int height)
+    {
+        SetWindowPos(
+            m_hwnd,
+            nullptr,
+            0,  // X (ignored due to SWP_NOMOVE)
+            0,  // Y (ignored due to SWP_NOMOVE)
+            width,
+            height,
+            SWP_NOMOVE | SWP_NOZORDER
+        );
+    }
+
+    void Window::setWindowResizable(bool enable)
+    {
+        LONG style = GetWindowLong(m_hwnd, GWL_STYLE);
+
+        if (enable) {
+            style |= (WS_SIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME);  // Enable resizing
+        } else {
+            style &= ~(WS_SIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME); // Disable resizing
+        }
+
+        SetWindowLong(m_hwnd, GWL_STYLE, style);
+        SetWindowPos(m_hwnd, nullptr, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
     }
 
     void* Window::getHandler()
