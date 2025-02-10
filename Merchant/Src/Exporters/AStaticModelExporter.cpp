@@ -7,7 +7,7 @@
 
 namespace Mrc
 {
-    void AStaticModelExporter::exportStaticModel(const AStaticModel &staticModel, const std::string &dirName, const std::string &fileName)
+    void AStaticModelExporter::exportAsStaticModel(const AStaticModel &staticModel, const std::string &dirName, const std::string &fileName)
     {
         flatbuffers::FlatBufferBuilder builder;
 

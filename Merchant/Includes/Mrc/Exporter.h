@@ -11,6 +11,6 @@ namespace Mrc
     public:
         Exporter() = delete;
         static void exportAsStaticModel(const AStaticModel& staticModel, const std::string& exportDirectory, const std::string& name);
-        static void exportClusteredStaticModel(const AStaticModel& staticModel, const std::string& exportDirectory, const std::string& name);
+        static void exportAsClusteredStaticModel(const AStaticModel& staticModel, const std::string& exportDirectory, const std::string& name);
     };
 }

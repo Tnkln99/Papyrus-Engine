@@ -1,8 +1,14 @@
-//
-// Created by onurk on 2/8/2025.
-//
+#pragma once
 
-#ifndef ACLUSTEREDSTATICMODELEXPORTER_H
-#define ACLUSTEREDSTATICMODELEXPORTER_H
+#include "Mrc/Data/AStaticModel.h"
 
-#endif //ACLUSTEREDSTATICMODELEXPORTER_H
+namespace Mrc
+{
+    class AClusteredStaticModelExporter
+    {
+    public:
+        void exportAsClusteredStaticModel(const AStaticModel& staticModel, const std::string &dirName, const std::string &fileName);
+    private:
+
+    };
+}

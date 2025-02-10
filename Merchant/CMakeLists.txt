@@ -19,7 +19,8 @@ target_include_directories(Merchant PUBLIC Includes)
 # ------------------------------------  add libaries  -------------------------------------------------
 target_link_libraries(Merchant PRIVATE Nomad)
 target_link_libraries(Merchant PRIVATE assimp)
-target_link_libraries(Merchant PUBLIC flatbuffers)
+target_link_libraries(Merchant PRIVATE DirectXMesh)
+target_link_libraries(Merchant PRIVATE flatbuffers)
 
 # --------------------------- Serialization data generation with flatbuffers -------------------------
 set(SCHEMES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/Schemes)
