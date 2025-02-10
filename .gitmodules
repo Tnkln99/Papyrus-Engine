@@ -4,9 +4,6 @@
 [submodule "Merchant/Externals/assimp"]
 	path = Merchant/Externals/assimp
 	url = https://github.com/assimp/assimp.git
-[submodule "Externals/boost"]
-	path = Externals/boost
-	url = https://github.com/boostorg/boost
 [submodule "Merchant/Externals/flatbuffers"]
 	path = Merchant/Externals/flatbuffers
 	url = https://github.com/google/flatbuffers.git
