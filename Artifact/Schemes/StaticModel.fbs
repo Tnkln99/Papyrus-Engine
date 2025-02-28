@@ -1,4 +1,4 @@
-namespace Mrc;
+namespace Arf.Fbs;
 
 table Vertex
 {
@@ -7,20 +7,17 @@ table Vertex
     uv: [float];
 }
 
-table Cluster
+table StaticMesh
 {
+    name: string;
     vertices: [Vertex]; // List of vertices
     indices: [uint32];  // List of indices
 }
 
-table Node
+table StaticModel
 {
-    clusters: [Cluster];
+    name: string;
+    meshes: [StaticMesh]; // List of meshes
 }
 
-table ClusteredStaticModel
-{
-    nodes: [Node]; // List of meshes
-}
-
-root_type ClusteredStaticModel;
+root_type StaticModel;

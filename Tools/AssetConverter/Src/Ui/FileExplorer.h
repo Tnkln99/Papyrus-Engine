@@ -14,9 +14,10 @@ namespace Ui
             return m_bSelectionMade;
         }
 
-        void setSelectionMade(const bool isSelectionMade)
+        // after using isSelectionMade it is the users responsibility to implement the logic and switch off the selection made
+        void endSelectionMade()
         {
-            m_bSelectionMade = isSelectionMade;
+            m_bSelectionMade = false;
         }
 
         [[nodiscard]] std::string getSelectedFileName() const

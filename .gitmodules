@@ -1,12 +1,12 @@
 [submodule "Externals/googletest"]
 	path = Externals/googletest
 	url = https://github.com/google/googletest.git
-[submodule "Merchant/Externals/assimp"]
-	path = Merchant/Externals/assimp
-	url = https://github.com/assimp/assimp.git
-[submodule "Merchant/Externals/flatbuffers"]
-	path = Merchant/Externals/flatbuffers
+[submodule "Externals/flatbuffers"]
+	path = Externals/flatbuffers
 	url = https://github.com/google/flatbuffers.git
-[submodule "Merchant/Externals/DirectXMesh"]
-	path = Merchant/Externals/DirectXMesh
+[submodule "Externals/DirectXMesh"]
+	path = Externals/DirectXMesh
 	url = https://github.com/microsoft/DirectXMesh.git
+[submodule "Externals/assimp"]
+	path = Externals/assimp
+	url = https://github.com/assimp/assimp.git

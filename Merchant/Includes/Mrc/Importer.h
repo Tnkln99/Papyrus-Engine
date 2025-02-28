@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Mrc/Data/AStaticModel.h"
+#include "Arf/Data/StaticModel.h"
 #include <string>
 #include <memory>
 
@@ -15,9 +15,9 @@ namespace Mrc
         ~Importer();
 
         // import process happens here
-        void getStaticModel(AStaticModel& outModel) const;
+        void getStaticModel(Arf::StaticModel& outModel) const;
     private:
-        std::unique_ptr<IImporter> m_importer;
         std::string m_filePath;
+        std::string m_extension;
     };
 }

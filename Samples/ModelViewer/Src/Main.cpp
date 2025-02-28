@@ -6,6 +6,7 @@
 #include "Crv/Data/StaticModelCreateInfo.h"
 #include "Nmd/Logger.h"
 #include "Mrc/Importer.h"
+#include "Arf/Data/StaticModel.h"
 
 #include <windows.h>
 #include <iostream>
@@ -19,15 +20,15 @@ std::vector<Crv::StaticModelCreateInfo> importFileAsAScene(const std::string &fi
     std::vector<Crv::StaticModelCreateInfo> results;
 
     const Mrc::Importer importer(filaPath);
-    Mrc::AStaticModel model;
+    Arf::StaticModel model;
     importer.getStaticModel(model);
 
     Crv::StaticModelCreateInfo modelCreateInfo;
     modelCreateInfo.m_name = model.m_name;
-    for (const Mrc::AStaticMesh & mesh : model.m_meshes)
+    for (const Arf::StaticMesh & mesh : model.m_meshes)
     {
         std::vector<uint8_t> vertexBuffer;
-        vertexBuffer.resize(mesh.m_vertices.size() * sizeof(Mrc::AVertex));
+        vertexBuffer.resize(mesh.m_vertices.size() * sizeof(Arf::Vertex));
         std::memcpy(vertexBuffer.data(), mesh.m_vertices.data(), vertexBuffer.size());
 
         Crv::GeometryBufferCreateInfo bufferCreateInfo;
@@ -35,7 +36,7 @@ std::vector<Crv::StaticModelCreateInfo> importFileAsAScene(const std::string &fi
         bufferCreateInfo.m_indices = mesh.m_indices;
         bufferCreateInfo.m_vertexBuffer = vertexBuffer;
         bufferCreateInfo.m_vertexCount = mesh.m_vertices.size();
-        bufferCreateInfo.m_vertexSize = sizeof(Mrc::AVertex);
+        bufferCreateInfo.m_vertexSize = sizeof(Arf::Vertex);
 
         Crv::StaticMeshCreateInfo meshCreateInfo;
 

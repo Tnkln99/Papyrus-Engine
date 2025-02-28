@@ -5,7 +5,7 @@ namespace Ui
     enum class ConvertOption
     {
         StaticModel,
-        MeshletModel,
+        ClusteredModel,
         Cloth
     };
 
@@ -19,6 +19,11 @@ namespace Ui
         bool showFileExplorer() const;
         bool deleteInputSelected() const;
         bool deleteOutputSelected() const;
+
+        ConvertOption getOption() const
+        {
+            return m_selectedOption;
+        }
     private:
         bool m_bConvertButtonClicked = false;
         bool m_bFileExplorerButtonClicked = false;

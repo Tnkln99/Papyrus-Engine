@@ -13,4 +13,4 @@ file(GLOB_RECURSE SOURCES "Src/*.cpp" "Src/*.h")
 target_sources(ModelViewer PRIVATE ${SOURCES})
 
 # Linking against Sand
-target_link_libraries(ModelViewer PRIVATE Nomad Merchant Caravan Oasis)
+target_link_libraries(ModelViewer PRIVATE Nomad Merchant Artifact Caravan Oasis)

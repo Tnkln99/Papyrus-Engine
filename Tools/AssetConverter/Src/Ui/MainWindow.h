@@ -24,6 +24,7 @@ namespace Ui
         MainWindow& operator=(MainWindow&&) = delete;
     private:
         bool m_bOpenFileExplorer = false;
+        bool m_bOpenClusteredStaticModelConvertOptions = false;
 
         FileExplorer m_fileExplorer;
 

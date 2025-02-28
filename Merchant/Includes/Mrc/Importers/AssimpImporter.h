@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Mrc/Importers/IImporter.h"
-#include "Mrc/Data/AStaticModel.h"
+#include "Arf/Data/StaticModel.h"
 
 #include <string>
 
@@ -11,17 +10,17 @@ struct aiMesh;
 
 namespace Mrc
 {
-    class AssimpImporter final : public IImporter
+    class AssimpImporter final
     {
     public:
-        void import(const std::string &filePath, AStaticModel &outModel) override;
+        void import(const std::string &filePath, Arf::StaticModel &outModel);
 
     private:
-        void processScene(const aiScene* scene, AStaticModel &outModel);
+        void processScene(const aiScene* scene, Arf::StaticModel &outModel);
 
         aiNode *findFirstNodeWithMesh(aiNode *node);
 
-        void processModel(const aiNode* node, const aiScene* scene, AStaticModel& outModel);
-        void processMesh(const aiMesh* mesh, AStaticMesh& outMesh);
+        void processModel(const aiNode* node, const aiScene* scene, Arf::StaticModel& outModel);
+        void processMesh(const aiMesh* mesh, Arf::StaticMesh& outMesh);
     };
 }

@@ -1,28 +1,28 @@
 #pragma once
 
 #include <DirectXMath.h>
-#include <vector>
 #include <string>
+#include <vector>
 
-namespace Mrc
+namespace Arf
 {
-    struct AVertex
+    struct Vertex
     {
         DirectX::XMFLOAT3 m_position;
         DirectX::XMFLOAT3 m_normal;
         DirectX::XMFLOAT2 m_uv;
     };
 
-    struct AStaticMesh
+    struct StaticMesh
     {
         std::string m_name;
-        std::vector<AVertex> m_vertices;
+        std::vector<Vertex> m_vertices;
         std::vector<uint32_t> m_indices;
     };
 
-    struct AStaticModel
+    struct StaticModel
     {
         std::string m_name;
-        std::vector<AStaticMesh> m_meshes;
+        std::vector<StaticMesh> m_meshes;
     };
 }

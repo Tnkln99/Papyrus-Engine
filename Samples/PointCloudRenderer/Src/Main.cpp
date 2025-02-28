@@ -6,7 +6,7 @@
 #include "Crv/Renderers/PointCloudRenderer.h"
 
 #include "Mrc/Importer.h"
-#include "Mrc/Data/AStaticModel.h"
+#include "Arf/Data/StaticModel.h"
 #include "Mrc/Exporter.h"
 
 
@@ -18,19 +18,19 @@
 void importFileAsPointCloud(Crv::PointCloudRenderer& renderer, const std::string &filaPath)
 {
     const Mrc::Importer modelImporter(filaPath);
-    Mrc::AStaticModel model;
+    Arf::StaticModel model;
     modelImporter.getStaticModel(model);
 
     Mrc::Exporter::exportAsStaticModel(model, "", "Maymun");
 
     const Mrc::Importer asmImporter("Maymun.asm");
-    Mrc::AStaticModel model2;
+    Arf::StaticModel model2;
     asmImporter.getStaticModel(model2);
 
-    for (const Mrc::AStaticMesh & mesh : model2.m_meshes)
+    for (const Arf::StaticMesh & mesh : model2.m_meshes)
     {
         std::vector<uint8_t> vertexBuffer;
-        vertexBuffer.resize(mesh.m_vertices.size() * sizeof(Mrc::AVertex));
+        vertexBuffer.resize(mesh.m_vertices.size() * sizeof(Arf::Vertex));
         std::memcpy(vertexBuffer.data(), mesh.m_vertices.data(), vertexBuffer.size());
 
         for (const auto& vertex : mesh.m_vertices)

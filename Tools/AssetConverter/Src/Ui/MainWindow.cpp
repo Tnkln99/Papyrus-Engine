@@ -37,25 +37,44 @@ namespace Ui
             m_convertConsole.render();
             m_logger.render();
 
+
             if (m_convertConsole.startConversion()) // button clicked
             {
                 const auto& selectedFiles = m_inputBrowser.getSelectedFiles();
+
                 if (!selectedFiles.empty())
                 {
-                    for (const std::string& file : selectedFiles)
+                    switch (m_convertConsole.getOption())
                     {
-                        NOMAD_LOG(Nmd::LogLevel::Info, "Converting file {}", file);
-                        Mrc::Importer importer(file);
+                        case ConvertOption::StaticModel:
+                        {
+                            // todo: this will be replaced with a options popup
+                            for (const std::string& file : selectedFiles)
+                            {
+                                NOMAD_LOG(Nmd::LogLevel::Info, "Converting file {}", file);
+                                Mrc::Importer importer(file);
 
-                        Mrc::AStaticModel model;
-                        importer.getStaticModel(model);
+                                Mrc::AStaticModel model;
+                                importer.getStaticModel(model);
 
-                        std::string outputName = Nmd::FileHelper::getFileName(file);
+                                std::string outputName = Nmd::FileHelper::getFileName(file);
 
-                        Mrc::Exporter::exportAsStaticModel(model, "Output", outputName);
+                                Mrc::Exporter::exportAsStaticModel(model, "Output", outputName);
 
-                        m_outputBrowser.refresh();
+                                m_outputBrowser.refresh();
+                            }
+                            break;
+                        }
+                        case ConvertOption::ClusteredModel:
+                        {
+                            break;
+                        }
+                        default:
                     }
+                }
+                else
+                {
+                    NOMAD_LOG(Nmd::LogLevel::Warning, "No input file selected for conversion");
                 }
             }
 
@@ -75,6 +94,8 @@ namespace Ui
                 m_outputBrowser.deleteSelectedFiles();
             }
 
+            // popups
+
             m_fileExplorer.showFileExplorerPopup(&m_bOpenFileExplorer);
             if (m_fileExplorer.isSelectionMade())
             {
@@ -82,7 +103,7 @@ namespace Ui
                 {
                     NOMAD_LOG(Nmd::LogLevel::Info, "Could not copy the file");
                 }
-                m_fileExplorer.setSelectionMade(false);
+                m_fileExplorer.endSelectionMade();
                 m_inputBrowser.refresh();
             }
     }

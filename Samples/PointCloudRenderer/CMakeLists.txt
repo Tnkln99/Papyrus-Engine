@@ -13,4 +13,4 @@ file(GLOB_RECURSE SOURCES "Src/*.cpp" "Src/*.h")
 target_sources(PointCloudRenderer PRIVATE ${SOURCES})
 
 # Linking against Sand
-target_link_libraries(PointCloudRenderer PRIVATE Nomad Merchant Caravan Oasis)
+target_link_libraries(PointCloudRenderer PRIVATE Nomad Artifact Merchant Caravan Oasis)

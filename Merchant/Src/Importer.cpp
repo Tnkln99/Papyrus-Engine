@@ -3,7 +3,7 @@
 #include <filesystem>
 #include <utility>
 
-#include "Mrc/Importers/AStaticModelImporter.h"
+#include "Mrc/Importers/StaticModelImporter.h"
 #include "Mrc/Importers/AssimpImporter.h"
 #include "Nmd/FileHelper.h"
 
@@ -12,22 +12,22 @@ namespace Mrc
 {
     Importer::Importer(std::string filePath) : m_filePath(std::move(filePath))
     {
-        const std::string extension = Nmd::FileHelper::getFileExtension(m_filePath);
-
-        if (extension == "asm")
-        {
-            m_importer = std::make_unique<AStaticModelImporter>();
-        }
-        else
-        {
-            m_importer = std::make_unique<AssimpImporter>();
-        }
+        m_extension = Nmd::FileHelper::getFileExtension(m_filePath);
     }
 
     Importer::~Importer() = default;
 
-    void Importer::getStaticModel(AStaticModel&outModel) const
+    void Importer::getStaticModel(Arf::StaticModel& outModel) const
     {
-        m_importer->import(m_filePath, outModel);
+        if (m_extension == "asm")
+        {
+            StaticModelImporter importer;
+            importer.import(m_filePath, outModel);
+        }
+        else
+        {
+            AssimpImporter importer;
+            importer.import(m_filePath, outModel);
+        }
     }
 }

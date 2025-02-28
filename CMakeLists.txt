@@ -12,6 +12,9 @@ add_subdirectory(Externals)
 
 add_subdirectory(Nomad)
 add_subdirectory(Sand)
+add_subdirectory(Artifact)
+add_subdirectory(Atum)
+
 add_subdirectory(Merchant)
 add_subdirectory(Caravan)
 add_subdirectory(Oasis)
